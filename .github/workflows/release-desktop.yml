@@ -55,7 +55,7 @@ jobs:
       - name: Create macOS artifact
         run: |
           cd build/macos/Build/Products/Release
-          zip -r ../../../../../PlayTorrio-macOS-Universal.zip PlayTorrio.app
+          zip -r ../../../../../PlayTorrio-macOS-Universal.zip NipaPlay.app
       
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
