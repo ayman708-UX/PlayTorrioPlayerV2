@@ -579,19 +579,7 @@ class _VideoPlayerUIState extends State<VideoPlayerUI>
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: _handleTap,
-                  onSecondaryTapDown: globals.isDesktop
-                      ? (details) {
-                          if (!videoState.hasVideo) return;
-                          _hidePlaybackInfoOverlay();
-
-                          _contextMenuController.showActionsMenu(
-                            context: context,
-                            globalPosition: details.globalPosition,
-                            style: ContextMenuStyles.glass(context),
-                            actions: _buildContextMenuActions(videoState),
-                          );
-                        }
-                      : null,
+                  onSecondaryTapDown: null, // Disabled right-click menu
                   onLongPressStart: globals.isPhone
                       ? (details) => _handleLongPressStart(videoState)
                       : null,
