@@ -1,0 +1,409 @@
+name: 'Build macOS DMG'
+description: '构建 macOS 应用并生成 DMG 文件'
+inputs:
+  app-version:
+    description: '应用版本号'
+    required: true
+  macos-certificate-base64:
+    description: 'macOS Distribution Certificate (Base64)'
+    required: false
+    default: ''
+  macos-certificate-password:
+    description: 'macOS Certificate Password'
+    required: false
+    default: ''
+  apple-team-id:
+    description: 'Apple Team ID'
+    required: false
+    default: ''
+  apple-id:
+    description: 'Apple ID (email address) for notarization'
+    required: false
+    default: ''
+  apple-app-password:
+    description: 'Apple App-specific Password for notarization'
+    required: false
+    default: ''
+outputs:
+  dmg-path:
+    description: '生成的 DMG 文件路径'
+    value: ${{ steps.package.outputs.dmg_path }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Precache Flutter macOS artifacts
+      shell: bash
+      run: |
+        flutter precache --macos
+
+    - name: Build Web and copy assets
+      shell: bash
+      run: |
+        chmod +x build_and_copy_web.sh
+        ./build_and_copy_web.sh
+    
+    - name: Prepare macOS build environment
+      shell: bash
+      run: |
+        cd macos
+        export LANG=zh_CN.UTF-8
+        export LC_ALL=zh_CN.UTF-8
+        mkdir -p ~/.cocoapods
+        echo 'source "https://cdn.cocoapods.org/"' > ~/.cocoapods/config
+        echo "Cleaning existing Pods and cache for a fresh mdk nightly..."
+        rm -rf Pods Podfile.lock
+        pod cache clean fvp || true # Clean fvp pod's cache, which handles mdk
+        pod cache clean --all
+        echo "Running pod install --repo-update (this will run fvp/apple_deps.sh to get mdk nightly)..."
+        pod install --repo-update
+        cd ..
+
+    - name: Setup Code Signing
+      shell: bash
+      run: |
+        # 检查是否提供了签名证书
+        if [ -n "${{ inputs.macos-certificate-base64 }}" ] && [ -n "${{ inputs.apple-team-id }}" ]; then
+          echo "🔐 设置macOS代码签名..."
+          
+          # 导入证书到keychain
+          echo "${{ inputs.macos-certificate-base64 }}" | base64 --decode > certificate.p12
+          
+          # 创建临时keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD="temp_keychain_password"
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # 导入证书
+          security import certificate.p12 -P "${{ inputs.macos-certificate-password }}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          
+          # 设置证书权限
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # 清理证书文件
+          rm certificate.p12
+          
+          echo "✅ 证书导入成功"
+          echo "ENABLE_CODE_SIGNING=true" >> $GITHUB_ENV
+          echo "APPLE_TEAM_ID=${{ inputs.apple-team-id }}" >> $GITHUB_ENV
+          
+          # 设置公证相关环境变量
+          if [ -n "${{ inputs.apple-id }}" ] && [ -n "${{ inputs.apple-app-password }}" ]; then
+            echo "ENABLE_NOTARIZATION=true" >> $GITHUB_ENV
+            echo "APPLE_ID=${{ inputs.apple-id }}" >> $GITHUB_ENV
+            echo "APPLE_APP_PASSWORD=${{ inputs.apple-app-password }}" >> $GITHUB_ENV
+            echo "✅ 公证信息已配置"
+          else
+            echo "ENABLE_NOTARIZATION=false" >> $GITHUB_ENV
+            echo "⚠️ 未提供公证信息，应用将仅签名不公证"
+          fi
+        else
+          echo "⚠️ 未提供签名证书，将构建未签名版本"
+          echo "ENABLE_CODE_SIGNING=false" >> $GITHUB_ENV
+        fi
+
+    - name: Build macOS App
+      shell: bash
+      run: |
+        if [ "$ENABLE_CODE_SIGNING" = "true" ]; then
+          echo "🔨 构建已签名的macOS应用..."
+          flutter build macos --release \
+            --dart-define=APPLE_TEAM_ID=$APPLE_TEAM_ID
+        else
+          echo "🔨 构建未签名的macOS应用..."
+          flutter build macos --release
+        fi
+
+    - name: Sign macOS App
+      shell: bash
+      run: |
+        if [ "$ENABLE_CODE_SIGNING" = "true" ]; then
+          echo "🔐 对macOS应用进行代码签名..."
+          
+          APP_PATH="build/macos/Build/Products/Release/NipaPlay.app"
+          
+          # 查找可用的签名身份
+          echo "可用的签名身份："
+          security find-identity -v -p codesigning
+          
+          # 获取证书信息
+          echo "查找可用的代码签名证书..."
+          CERT_LIST=$(security find-identity -v -p codesigning)
+          echo "证书列表："
+          echo "$CERT_LIST"
+          
+          # 首先尝试 Developer ID Application 证书（用于分发和公证）
+          CERT_NAME=$(echo "$CERT_LIST" | grep "Developer ID Application" | head -1 | sed 's/.*) \([0-9A-F]*\) "\(.*\)"/\2/')
+          
+          if [ -z "$CERT_NAME" ]; then
+            echo "⚠️ 未找到Developer ID Application证书，查找Apple Development证书..."
+            # 备选：查找 Apple Development 证书
+            CERT_NAME=$(echo "$CERT_LIST" | grep "Apple Development" | head -1 | sed 's/.*) \([0-9A-F]*\) "\(.*\)"/\2/')
+          fi
+          
+          if [ -z "$CERT_NAME" ]; then
+            echo "⚠️ 未找到Apple Development证书，查找其他可用证书..."
+            # 最后备选：查找任何可用证书
+            CERT_NAME=$(echo "$CERT_LIST" | grep -E "(Developer|Apple)" | head -1 | sed 's/.*) \([0-9A-F]*\) "\(.*\)"/\2/')
+          fi
+          
+          if [ -n "$CERT_NAME" ]; then
+            echo "使用证书: $CERT_NAME"
+            
+            # 检查权限文件是否存在
+            if [ ! -f "macos/Runner/Release.entitlements" ]; then
+              echo "❌ 权限文件不存在"
+              exit 1
+            fi
+            
+            # 检查应用路径是否存在
+            if [ ! -d "$APP_PATH" ]; then
+              echo "❌ 应用路径不存在: $APP_PATH"
+              exit 1
+            fi
+            
+            # 对所有框架进行深度签名（确保使用 runtime 选项）
+            echo "正在对框架进行签名..."
+            find "$APP_PATH/Contents/Frameworks" -name "*.framework" -exec basename {} \; | sort | while read framework; do
+              framework_path="$APP_PATH/Contents/Frameworks/$framework"
+              if [ -d "$framework_path" ]; then
+                echo "签名框架: $framework_path"
+                codesign --force --deep --sign "$CERT_NAME" \
+                  --options runtime \
+                  --timestamp \
+                  "$framework_path"
+                
+                # 验证框架签名
+                if codesign --verify --deep --strict "$framework_path" 2>/dev/null; then
+                  echo "✅ 框架签名验证成功: $framework"
+                else
+                  echo "⚠️ 框架签名验证失败: $framework"
+                fi
+              fi
+            done
+            
+            # 对动态库进行签名
+            echo "正在对动态库进行签名..."
+            find "$APP_PATH" -name "*.dylib" -exec codesign --force --sign "$CERT_NAME" --options runtime --timestamp {} \;
+              
+            echo "正在对主应用进行签名..."
+            echo "应用路径: $APP_PATH"
+            echo "证书名称: $CERT_NAME (隐藏敏感信息)"
+            echo "权限文件: macos/Runner/Release.entitlements"
+            
+            # 对主应用进行签名（使用与本地相同的参数）
+            codesign --force --deep --sign "$CERT_NAME" \
+              --options runtime \
+              --timestamp \
+              --entitlements macos/Runner/Release.entitlements \
+              "$APP_PATH"
+              
+            # 详细验证签名
+            echo "验证应用签名..."
+            codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+            
+            if [ $? -eq 0 ]; then
+              echo "✅ 应用签名完成"
+              # 显示签名信息
+              echo "签名信息："
+              codesign -dv --verbose=4 "$APP_PATH"
+            else
+              echo "❌ 应用签名验证失败"
+              exit 1
+            fi
+          else
+            echo "❌ 未找到有效的签名证书"
+            exit 1
+          fi
+        else
+          echo "⏭️ 跳过应用签名（未提供证书）"
+        fi
+
+    - name: Notarize macOS App
+      shell: bash
+      run: |
+        if [ "$ENABLE_NOTARIZATION" = "true" ] && [ "$ENABLE_CODE_SIGNING" = "true" ]; then
+          echo "🔐 开始公证 macOS 应用..."
+          
+          APP_PATH="build/macos/Build/Products/Release/NipaPlay.app"
+          
+          # 验证应用已正确签名
+          if ! codesign --verify --deep --strict --verbose=2 "$APP_PATH" 2>/dev/null; then
+            echo "❌ 应用签名验证失败，无法进行公证"
+            exit 1
+          fi
+          
+          # 检查应用是否使用了 Hardened Runtime
+          echo "检查 Hardened Runtime 设置..."
+          codesign -d --entitlements - "$APP_PATH"
+          
+          # 创建 zip 文件用于公证（与本地一致的方式）
+          echo "📦 创建应用压缩包..."
+          ditto -c -k --keepParent "$APP_PATH" "NipaPlay.zip"
+          
+          # 上传公证
+          echo "☁️ 上传到 Apple 进行公证..."
+          SUBMISSION_ID=$(xcrun notarytool submit "NipaPlay.zip" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --output-format json \
+            --wait | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          
+          if [ -z "$SUBMISSION_ID" ] || [ "$SUBMISSION_ID" = "null" ]; then
+            echo "❌ 获取提交ID失败"
+            rm -f "NipaPlay.zip"
+            exit 1
+          fi
+          
+          echo "提交ID: $SUBMISSION_ID"
+          
+          # 获取公证状态
+          echo "检查公证状态..."
+          STATUS=$(xcrun notarytool info "$SUBMISSION_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --output-format json | python3 -c "import sys,json; print(json.load(sys.stdin).get('status',''))")
+          
+          echo "公证状态: $STATUS"
+          
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "❌ 公证失败，状态: $STATUS"
+            echo "获取公证日志..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_APP_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID"
+            rm -f "NipaPlay.zip"
+            exit 1
+          fi
+          
+          echo "✅ 公证成功"
+          
+          # 清理临时文件
+          rm -f "NipaPlay.zip"
+          
+          # 等待公证票据在 Apple 服务器上准备就绪
+          echo "等待公证票据准备就绪..."
+          sleep 60
+          
+          # 尝试附加票据，最多重试5次，每次间隔更长
+          echo "🎫 附加公证票据..."
+          STAPLE_SUCCESS=false
+          for attempt in 1 2 3 4 5; do
+            echo "尝试附加票据 (第 $attempt 次)..."
+            if xcrun stapler staple "$APP_PATH" 2>&1; then
+              echo "✅ 公证票据附加成功"
+              STAPLE_SUCCESS=true
+              break
+            else
+              echo "⚠️ 第 $attempt 次附加失败"
+              if [ $attempt -lt 5 ]; then
+                wait_time=$((attempt * 30))
+                echo "等待 $wait_time 秒后重试..."
+                sleep $wait_time
+              fi
+            fi
+          done
+          
+          if [ "$STAPLE_SUCCESS" = "false" ]; then
+            echo "⚠️ 公证票据附加失败，但应用已经公证"
+            echo "应用仍然可以正常分发，用户首次运行时会在线验证"
+            # 不要因为票据附加失败而退出，因为应用已经公证成功
+          else
+            # 验证公证
+            if xcrun stapler validate "$APP_PATH"; then
+              echo "✅ 公证验证成功 - 应用现在可以离线运行"
+            else
+              echo "⚠️ 公证验证失败，但应用已公证，仍可在线验证"
+            fi
+          fi
+          
+        elif [ "$ENABLE_CODE_SIGNING" = "true" ]; then
+          echo "⚠️ 应用已签名但未公证，用户可能需要手动允许运行"
+        else
+          echo "⏭️ 跳过公证（未签名或未配置）"
+        fi
+
+    - name: Copy mdk.framework.dSYM to App Bundle
+      shell: bash
+      run: |
+        echo "Attempting to copy mdk.framework.dSYM for symbolication..."
+        MDK_ARTIFACTS_DIR="macos/Pods/mdk"
+        DSYM_SOURCE_PATH="${MDK_ARTIFACTS_DIR}/mdk.framework.dSYM"
+        
+        APP_BUNDLE_NAME="NipaPlay.app"
+        APP_BUNDLE_ROOT_DIR="build/macos/Build/Products/Release"
+        TARGET_DSYM_DIR="${APP_BUNDLE_ROOT_DIR}/${APP_BUNDLE_NAME}/Contents/Frameworks"
+
+        if [ -d "$DSYM_SOURCE_PATH" ]; then
+          echo "Found mdk.framework.dSYM at $DSYM_SOURCE_PATH"
+          
+          if [ ! -d "${APP_BUNDLE_ROOT_DIR}/${APP_BUNDLE_NAME}" ]; then
+            echo "Error: App bundle ${APP_BUNDLE_ROOT_DIR}/${APP_BUNDLE_NAME} not found after flutter build."
+            echo "Listing contents of ${APP_BUNDLE_ROOT_DIR}/:"
+            ls -la "${APP_BUNDLE_ROOT_DIR}/"
+            exit 1
+          fi
+          
+          if [ ! -d "$TARGET_DSYM_DIR" ]; then
+             echo "Warning: Target Frameworks directory $TARGET_DSYM_DIR does not exist. Will attempt to create it."
+             mkdir -p "$TARGET_DSYM_DIR"
+          fi
+
+          echo "Copying $DSYM_SOURCE_PATH to $TARGET_DSYM_DIR/"
+          cp -R "$DSYM_SOURCE_PATH" "$TARGET_DSYM_DIR/"
+          if [ $? -eq 0 ]; then
+            echo "Successfully copied mdk.framework.dSYM from $DSYM_SOURCE_PATH."
+            echo "Contents of $TARGET_DSYM_DIR after copy:"
+            ls -la "$TARGET_DSYM_DIR"
+          else
+            echo "Error: Failed to copy mdk.framework.dSYM from $DSYM_SOURCE_PATH."
+            exit 1
+          fi
+        else
+          echo "Warning: mdk.framework.dSYM not found at the revised expected path $DSYM_SOURCE_PATH."
+          echo "Symbolicated crash logs for mdk might not be available."
+        fi
+
+    - name: Package macOS DMG
+      id: package
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        version="${{ inputs.app-version }}"
+        dmg_name="NipaPlay_${version}_macOS_Universal.dmg"
+        app_path="build/macos/Build/Products/Release/NipaPlay.app"
+
+        if [ ! -d "$app_path" ]; then
+          echo "Error: App not found at $app_path"
+          ls -la "build/macos/Build/Products/Release" || true
+          exit 1
+        fi
+
+        echo "Packaging DMG via hdiutil (no Homebrew dependencies)..."
+        rm -f "$dmg_name"
+
+        temp_dir=$(mktemp -d)
+        cp -R "$app_path" "${temp_dir}/"
+        ln -s /Applications "${temp_dir}/Applications"
+
+        hdiutil create \
+          -volname "NipaPlay-${version}" \
+          -srcfolder "${temp_dir}" \
+          -ov \
+          -format UDZO \
+          "$dmg_name"
+
+        hdiutil internet-enable -no "$dmg_name" || true
+        rm -rf "${temp_dir}"
+
+        echo "Listing final DMG:"
+        ls -la "$dmg_name"
+
+        echo "dmg_path=$dmg_name" >> $GITHUB_OUTPUT

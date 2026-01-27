@@ -1,0 +1,149 @@
+name: Release Desktop Builds
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build Windows
+        run: flutter build windows --release
+      
+      - name: Create Windows artifact
+        run: |
+          cd build/windows/x64/runner/Release
+          Compress-Archive -Path * -DestinationPath ../../../../../PlayTorrio-Windows-x64.zip
+      
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayTorrio-Windows-x64
+          path: PlayTorrio-Windows-x64.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build macOS
+        run: flutter build macos --release
+      
+      - name: Create macOS artifact
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r ../../../../../PlayTorrio-macOS-Universal.zip PlayTorrio.app
+      
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayTorrio-macOS-Universal
+          path: PlayTorrio-macOS-Universal.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build Linux
+        run: flutter build linux --release
+      
+      - name: Create Linux artifact
+        run: |
+          cd build/linux/x64/release
+          tar -czf ../../../../PlayTorrio-Linux-x64.tar.gz bundle
+      
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayTorrio-Linux-x64
+          path: PlayTorrio-Linux-x64.tar.gz
+
+  create-release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Get version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: PlayTorrio ${{ steps.version.outputs.version }}
+          body: |
+            ## PlayTorrio Desktop Release
+            
+            Portable builds for Windows, macOS (Universal), and Linux.
+            
+            ### Downloads
+            - **Windows**: `PlayTorrio-Windows-x64.zip` - Extract and run `PlayTorrio.exe`
+            - **macOS**: `PlayTorrio-macOS-Universal.zip` - Extract and run `PlayTorrio.app` (Universal: Intel + Apple Silicon)
+            - **Linux**: `PlayTorrio-Linux-x64.tar.gz` - Extract and run `bundle/playtorrio`
+            
+            ### IPC Integration
+            All builds support IPC mode for Electron integration. Launch with `--ipc` flag.
+            See `bridge.md` for complete documentation.
+            
+            ### Requirements
+            - **Windows**: Windows 10 or later
+            - **macOS**: macOS 10.14 or later
+            - **Linux**: GTK3 required (`sudo apt-get install libgtk-3-0`)
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/PlayTorrio-Windows-x64/PlayTorrio-Windows-x64.zip
+            artifacts/PlayTorrio-macOS-Universal/PlayTorrio-macOS-Universal.zip
+            artifacts/PlayTorrio-Linux-x64/PlayTorrio-Linux-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

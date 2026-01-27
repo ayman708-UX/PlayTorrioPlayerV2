@@ -1,0 +1,167 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:nipaplay/player_menu/player_menu_pane_controllers.dart';
+import 'base_settings_menu.dart';
+
+class PlaybackRateMenu extends StatefulWidget {
+  final VoidCallback onClose;
+  final ValueChanged<bool>? onHoverChanged;
+
+  const PlaybackRateMenu({
+    super.key,
+    required this.onClose,
+    this.onHoverChanged,
+  });
+
+  @override
+  State<PlaybackRateMenu> createState() => _PlaybackRateMenuState();
+}
+
+class _PlaybackRateMenuState extends State<PlaybackRateMenu> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PlaybackRatePaneController>(
+      builder: (context, controller, child) {
+        return BaseSettingsMenu(
+          title: '倍速设置',
+          onClose: widget.onClose,
+          onHoverChanged: widget.onHoverChanged,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 当前倍速显示
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '当前倍速',
+                          locale:Locale("zh-Hans","zh"),
+style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          '${controller.currentRate}x',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      controller.isSpeedBoostActive
+                          ? '正在倍速播放'
+                          : '点击下方选项或长按屏幕倍速播放',
+                      locale:Locale("zh-Hans","zh"),
+style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const Divider(color: Colors.white24, height: 1),
+              
+              // 倍速选项列表
+              ...controller.speedOptions.map((speed) {
+                final isSelected = controller.currentRate == speed;
+                final isNormalSpeed = speed == 1.0;
+                
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      controller.setPlaybackRate(speed);
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white.withOpacity(0.15) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getSpeedIcon(speed, isNormalSpeed),
+                            color: isSelected 
+                                ? Colors.white 
+                                : isNormalSpeed 
+                                    ? Colors.white70 
+                                    : Colors.white60,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              '${speed}x ${_getSpeedDescription(speed, isNormalSpeed)}',
+                              locale:Locale("zh-Hans","zh"),
+style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.white70,
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 获取圆滑的速度图标
+  IconData _getSpeedIcon(double speed, bool isNormalSpeed) {
+    if (isNormalSpeed) {
+      return Icons.play_circle_outline_rounded;
+    } else if (speed < 1.0) {
+      return Icons.slow_motion_video_rounded;
+    } else if (speed <= 2.0) {
+      return Icons.fast_forward_rounded;
+    } else {
+      return Icons.rocket_launch_rounded;
+    }
+  }
+
+  // 获取速度描述
+  String _getSpeedDescription(double speed, bool isNormalSpeed) {
+    if (isNormalSpeed) {
+      return '(正常速度)';
+    } else if (speed < 1.0) {
+      return '(慢速)';
+    } else if (speed <= 2.0) {
+      return '(快速)';
+    } else {
+      return '(极速)';
+    }
+  }
+} 
