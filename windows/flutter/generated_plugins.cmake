@@ -3,8 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  charset_converter
-  desktop_drop
   file_selector_windows
   fvp
   hotkey_manager_windows
@@ -13,7 +11,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   permission_handler_windows
   screen_brightness_windows
   screen_retriever_windows
-  tray_manager
   url_launcher_windows
   volume_controller
   window_manager

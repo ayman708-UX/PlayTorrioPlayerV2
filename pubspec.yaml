@@ -1,8 +1,8 @@
-name: PlayTorrioPlayer
-description: "Player for the app playtorrio built on nipaplay"
-publish_to: 'none' 
+name: nipaplay
+description: "PlayTorrio Video Player"
+publish_to: 'none'
 
-version: 1.8.12
+version: 1.8.13
 
 environment:
   sdk: ^3.5.3
@@ -10,48 +10,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
 
-  shelf: ^1.4.1
-  shelf_static: ^1.1.2
-  shelf_router: ^1.1.4
-  shelf_cors_headers: ^0.1.5
-  
-
+  # Core dependencies
   window_manager: ^0.4.3
-  tray_manager: ^0.5.2
   shared_preferences: ^2.2.2
   provider: ^6.1.2
-  file_selector: ^1.0.3
   path_provider: ^2.1.2
   path: ^1.9.1
-  package_info_plus: ^8.3.0
-  image_picker: ^1.1.2
-  permission_handler: ^12.0.0+1
   glassmorphism: ^3.0.0
-  fvp: ^0.33.1
-  http: ^1.3.0
-  dio: ^5.1.0
-  xml: ^6.5.0
-  webdav_client: ^1.2.2
-  crypto: ^3.0.3
-  cached_network_image: ^3.4.1
-  file_picker: ^8.0.6
-  hugeicons: ^0.0.10
-  url_launcher: ^6.3.1
-  universal_html: ^2.2.4
-  kmbal_ionicons: ^1.0.0
-  image: ^4.5.4
-  intl: ^0.20.2
-  uuid: ^4.5.1
-  transparent_image: ^2.0.1
-  wakelock_plus: ^1.3.2
-  screen_brightness: ^2.1.3
-  volume_controller: ^3.4.0
-  sqflite: ^2.3.2
-  sqflite_common_ffi: ^2.3.3  
-  video_player: 2.9.5
+  
+  # Media playback
   media_kit: 
     git:
       url: https://github.com/Shinokawa/media-kit.git
@@ -67,95 +35,50 @@ dependencies:
       url: https://github.com/Shinokawa/media-kit.git
       ref: main
       path: ./libs/universal/media_kit_libs_video
-  qr_flutter: ^4.1.0  
-  flutter_svg: ^2.0.14  
-  flutter_markdown: ^0.7.1
-  desktop_drop: ^0.6.1
-  cupertino_icons: ^1.0.8
-  charset_converter: ^2.1.1
-  system_info2: ^3.0.1
+
+  # Dependencies needed by existing code (kept for compatibility)
+  http: ^1.3.0
+  dio: ^5.1.0
+  xml: ^6.5.0
+  webdav_client: ^1.2.2
+  crypto: ^3.0.3
+  cached_network_image: ^3.4.1
+  file_picker: ^8.0.6
+  file_selector: ^1.0.3
+  image: ^4.5.4
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  wakelock_plus: ^1.3.2
+  screen_brightness: ^2.1.3
+  volume_controller: ^3.4.0
+  sqflite: ^2.3.2
+  sqflite_common_ffi: ^2.3.3
+  video_player: 2.9.5
+  fvp: ^0.33.1
   hotkey_manager: ^0.2.3
   fluent_ui: ^4.12.0
-  adaptive_platform_ui: ^0.1.98
   ffi: ^2.1.3
   smb_connect: ^0.0.9
   nipaplay_smb2:
     path: packages/nipaplay_smb2
+  kmbal_ionicons: ^1.0.0
+  permission_handler: ^12.0.0+1
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  url_launcher: ^6.3.1
+  
+  # UI
+  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^4.0.0
-  flutter_launcher_icons: ^0.14.1
-
-flutter_launcher_icons:
-  android: false
-  ios: false
-  web: false
-  windows:
-    generate: true
-    image_path: "icons/new-icon-win.png"
-    icon_size: 48
-  macos:
-    generate: true
-    image_path: "icons/new-icon-mac.png"
-  linux:
-    generate: true
-    image_path: "icons/new-icon-win.png"
 
 flutter:
-  assets:
-    - assets/logo.png
-    - assets/images/logo512.png
-    - assets/backempty.png
-    - assets/nipaplay.png
-    - assets/dandanplay.png
-    - assets/bangumi.png
-    - assets/images/main_image.png
-    - assets/images/main_image_mobile.png
-    - assets/subfont.ttf
-    - assets/jellyfin.svg
-    - assets/emby.svg
-    - assets/images/
-    - others/赞赏码.jpg
-    - assets/shaders/anime4k/
-    - assets/shaders/crt/
-    # --- Web UI Assets ---
-    - assets/web/
-    - assets/web/assets/
-    - assets/web/assets/assets/
-    - assets/web/assets/assets/images/
-    - assets/web/assets/fonts/
-    - assets/web/assets/packages/
-    - assets/web/assets/packages/cupertino_icons/
-    - assets/web/assets/packages/cupertino_icons/assets/
-    - assets/web/assets/packages/hugeicons/
-    - assets/web/assets/packages/hugeicons/lib/
-    - assets/web/assets/packages/hugeicons/lib/fonts/
-    - assets/web/assets/packages/kmbal_ionicons/
-    - assets/web/assets/packages/kmbal_ionicons/assets/
-    - assets/web/assets/packages/kmbal_ionicons/assets/fonts/
-    - assets/web/assets/packages/media_kit/
-    - assets/web/assets/packages/media_kit/assets/
-    - assets/web/assets/packages/media_kit/assets/web/
-    - assets/web/assets/packages/wakelock_plus/
-    - assets/web/assets/packages/wakelock_plus/assets/
-    - assets/web/assets/shaders/
-    - assets/web/canvaskit/
-    - assets/web/canvaskit/chromium/
-    - assets/web/icons/
-    
-
   uses-material-design: true
 
-  fonts:
-    - family: subfont
-      fonts:
-        - asset: assets/subfont.ttf
-
 dependency_overrides:
-
   math_expressions: 2.3.1
   fluent_ui: 4.11.0
   media_kit:
@@ -178,16 +101,6 @@ dependency_overrides:
       url: https://github.com/Shinokawa/media-kit.git
       ref: main
       path: ./libs/linux/media_kit_libs_linux
-  media_kit_libs_ios_video:
-    git:
-      url: https://github.com/Shinokawa/media-kit.git
-      ref: main
-      path: ./libs/ios/media_kit_libs_ios_video
-  media_kit_libs_android_video:
-    git:
-      url: https://github.com/Shinokawa/media-kit.git
-      ref: main
-      path: ./libs/android/media_kit_libs_android_video
   media_kit_libs_windows_video:
     git:
       url: https://github.com/Shinokawa/media-kit.git
