@@ -106,12 +106,26 @@ jobs:
           mkdir -p AppDir/usr/share/applications
           mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
           
-          # Copy the Flutter bundle - the executable is named 'nipaplay' not 'playtorrio'
+          # Debug: List what Flutter actually built
+          echo "=== Contents of build/linux/x64/release/bundle ==="
+          ls -la build/linux/x64/release/bundle/
+          
+          # Copy the Flutter bundle
           cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
           
-          # Rename the executable to playtorrio for consistency
+          # Debug: List what we copied
+          echo "=== Contents of AppDir/usr/bin ==="
+          ls -la AppDir/usr/bin/
+          
+          # Find and rename the executable
           if [ -f "AppDir/usr/bin/nipaplay" ]; then
+            echo "Found nipaplay, renaming to playtorrio"
             mv AppDir/usr/bin/nipaplay AppDir/usr/bin/playtorrio
+            chmod +x AppDir/usr/bin/playtorrio
+          else
+            echo "ERROR: nipaplay not found!"
+            echo "Looking for any executables..."
+            find AppDir/usr/bin -type f -executable
           fi
           
           # Copy icon (if exists)
@@ -132,6 +146,10 @@ jobs:
           Comment=Video Player with Danmaku Support
           Terminal=false
           EOF
+          
+          # Final debug
+          echo "=== Final check for playtorrio executable ==="
+          ls -la AppDir/usr/bin/playtorrio || echo "playtorrio NOT FOUND!"
       
       - name: Build AppImage
         run: |
