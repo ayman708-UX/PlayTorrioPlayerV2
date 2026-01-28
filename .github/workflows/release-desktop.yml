@@ -89,7 +89,10 @@ jobs:
         run: |
           wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
-          sudo mv appimagetool /usr/local/bin/
+          # Extract appimagetool to avoid FUSE requirement
+          ./appimagetool --appimage-extract
+          sudo mv squashfs-root/usr/bin/appimagetool /usr/local/bin/
+          sudo chmod +x /usr/local/bin/appimagetool
       
       - name: Create AppImage structure
         run: |
@@ -138,7 +141,7 @@ jobs:
       
       - name: Build AppImage
         run: |
-          ARCH=x86_64 appimagetool AppDir PlayTorrio-Linux-x64.AppImage
+          ARCH=x86_64 appimagetool --no-appstream AppDir PlayTorrio-Linux-x64.AppImage
       
       - name: Upload Linux AppImage artifact
         uses: actions/upload-artifact@v4
