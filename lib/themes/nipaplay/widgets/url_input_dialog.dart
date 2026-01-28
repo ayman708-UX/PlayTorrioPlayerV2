@@ -116,7 +116,7 @@ class _UrlInputDialogState extends State<UrlInputDialog> {
                   autofocus: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Enter video URL (http:// or https://)',
+                    hintText: 'Enter video URL (http://, https://, or localhost)',
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
                     filled: true,
                     fillColor: Colors.black.withOpacity(0.5),

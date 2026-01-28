@@ -758,7 +758,29 @@ class _VideoPlayerUIState extends State<VideoPlayerUI>
           );
         }
 
-        return const SizedBox.shrink();
+        // Show loading spinner when video is loading
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+                const SizedBox(height: 16),
+                if (videoState.statusMessages.isNotEmpty)
+                  Text(
+                    videoState.statusMessages.last,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

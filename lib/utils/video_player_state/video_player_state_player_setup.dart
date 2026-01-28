@@ -32,9 +32,12 @@ extension VideoPlayerStatePlayerSetup on VideoPlayerState {
       debugPrint('VideoPlayerState: 没有 historyItem，重置弹幕 ID');
     }
 
-    // 检查是否为网络URL (HTTP或HTTPS)
+    // Check if it's a network URL (HTTP, HTTPS, or localhost/IP)
     bool isNetworkUrl =
-        videoPath.startsWith('http://') || videoPath.startsWith('https://');
+        videoPath.startsWith('http://') || 
+        videoPath.startsWith('https://') ||
+        videoPath.contains('localhost') ||
+        RegExp(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}').hasMatch(videoPath);
 
     // 检查是否是流媒体（jellyfin://协议、emby://协议）
     bool isJellyfinStream = videoPath.startsWith('jellyfin://');
@@ -115,30 +118,11 @@ extension VideoPlayerStatePlayerSetup on VideoPlayerState {
       return;
     }
 
-    // 对网络URL和Jellyfin流媒体进行特殊处理
+    // Skip URL validation - let the player handle connection errors directly
     if (videoPath.startsWith('http://') || videoPath.startsWith('https://')) {
       debugPrint('VideoPlayerState: 准备流媒体URL: $videoPath');
-      // 添加网络错误处理的尝试/捕获块
-      try {
-        // 测试网络连接
-        await http.head(Uri.parse(videoPath));
-      } catch (e) {
-        // 如果网络请求失败，使用专门的错误处理逻辑
-        await _handleStreamUrlLoadingError(
-            videoPath, e is Exception ? e : Exception(e.toString()));
-        return; // 避免继续处理
-      }
     } else if ((isJellyfinStream || isEmbyStream) && actualPlayUrl != null) {
       debugPrint('VideoPlayerState: 准备流媒体URL: $actualPlayUrl');
-      // 对Jellyfin流媒体测试实际播放URL的连接
-      try {
-        await http.head(Uri.parse(actualPlayUrl));
-      } catch (e) {
-        // 如果网络请求失败，使用专门的错误处理逻辑
-        await _handleStreamUrlLoadingError(
-            actualPlayUrl, e is Exception ? e : Exception(e.toString()));
-        return; // 避免继续处理
-      }
     }
 
     // 更新字幕管理器的视频路径
