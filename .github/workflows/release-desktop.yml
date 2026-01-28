@@ -106,8 +106,13 @@ jobs:
           mkdir -p AppDir/usr/share/applications
           mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
           
-          # Copy the Flutter bundle
+          # Copy the Flutter bundle - the executable is named 'nipaplay' not 'playtorrio'
           cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
+          
+          # Rename the executable to playtorrio for consistency
+          if [ -f "AppDir/usr/bin/nipaplay" ]; then
+            mv AppDir/usr/bin/nipaplay AppDir/usr/bin/playtorrio
+          fi
           
           # Copy icon (if exists)
           if [ -f "linux/playtorrio.png" ]; then
