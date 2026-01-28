@@ -96,12 +96,12 @@ jobs:
           cd build/linux/x64/release/bundle
           
           # Create a wrapper script that sets LD_LIBRARY_PATH
-          cat > NipaPlay.sh << 'EOF'
-#!/bin/bash
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
-exec "${SCRIPT_DIR}/NipaPlay" "$@"
-EOF
+          cat > NipaPlay.sh << 'WRAPPER_SCRIPT'
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
+          exec "${SCRIPT_DIR}/NipaPlay" "$@"
+          WRAPPER_SCRIPT
           chmod +x NipaPlay.sh
           
           # Copy all system dependencies
