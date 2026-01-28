@@ -1,0 +1,11 @@
+#!/bin/bash
+# Custom AppRun script for NipaPlay AppImage
+
+HERE="$(dirname "$(readlink -f "${0}")")"
+export LD_LIBRARY_PATH="${HERE}/lib:${LD_LIBRARY_PATH}"
+
+# Set up data directory
+export NIPAPLAY_DATA_DIR="${HERE}/data"
+
+# Execute the binary
+exec "${HERE}/NipaPlay" "$@"

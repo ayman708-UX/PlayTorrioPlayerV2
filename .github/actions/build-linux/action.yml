@@ -183,6 +183,11 @@ runs:
         cp "${ASSETS_LINUX_DIR}/${DESKTOP_FILE_NAME}" "${APPDIR}/"
         cp "${ICON_SOURCE_PATH}" "${APPDIR}/${ICON_NAME}"
         
+        # Copy custom AppRun script
+        echo "Copying custom AppRun script"
+        cp "${ASSETS_LINUX_DIR}/AppRun" "${APPDIR}/"
+        chmod +x "${APPDIR}/AppRun"
+        
         # Download linuxdeployqt
         echo "Downloading linuxdeployqt..."
         wget -q https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -O linuxdeployqt
@@ -195,7 +200,13 @@ runs:
         export LINUXDEPLOYQT_EXCLUDE_LIBS="libgio-2.0.so*;libglib-2.0.so*;libgobject-2.0.so*;libgmodule-2.0.so*;libgthread-2.0.so*;libgdk_pixbuf-2.0.so*;librsvg-2.so*;libEGL.so*;libGL.so*;libGLESv2.so*;libGLX.so*;libOpenGL.so*;libGLdispatch.so*;libgbm.so*;libdrm.so*;libvulkan.so*"
         chmod +x "${APPDIR}/${APP_NAME}"
         
-        ./linuxdeployqt "${APPDIR}/${APP_NAME}" -unsupported-allow-new-glibc -appimage -bundle-non-qt-libs
+        # Use --no-copy-copyright-files to prevent linuxdeployqt from overwriting our custom AppRun
+        ./linuxdeployqt "${APPDIR}/${APP_NAME}" -unsupported-allow-new-glibc -appimage -bundle-non-qt-libs --no-copy-copyright-files
+        
+        # Restore custom AppRun (in case linuxdeployqt overwrote it)
+        echo "Restoring custom AppRun script"
+        cp "${ASSETS_LINUX_DIR}/AppRun" "${APPDIR}/"
+        chmod +x "${APPDIR}/AppRun"
 
         echo "Removing bundled host-sensitive libraries (avoid mixing with host modules/drivers)..."
         find "${APPDIR}" -type f \( \
