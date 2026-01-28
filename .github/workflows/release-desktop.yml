@@ -100,6 +100,39 @@ jobs:
           # Copy Flutter bundle
           cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
           
+          # Copy required system libraries
+          echo "Copying system dependencies..."
+          
+          # Function to copy library and its dependencies
+          copy_deps() {
+            local lib=$1
+            if [ -f "$lib" ]; then
+              cp "$lib" AppDir/usr/lib/
+              # Get dependencies
+              ldd "$lib" | grep "=> /" | awk '{print $3}' | while read dep; do
+                if [ -f "$dep" ] && [ ! -f "AppDir/usr/lib/$(basename $dep)" ]; then
+                  cp "$dep" AppDir/usr/lib/ 2>/dev/null || true
+                fi
+              done
+            fi
+          }
+          
+          # Copy Flutter engine dependencies
+          for lib in AppDir/usr/bin/lib/*.so*; do
+            if [ -f "$lib" ]; then
+              copy_deps "$lib"
+            fi
+          done
+          
+          # Copy critical system libraries
+          for lib in libgtk-3 libgdk-3 libmpv libGL libEGL libwayland libxcb libX11 libpango libcairo libglib libgobject libgio; do
+            find /usr/lib /lib -name "${lib}.so*" 2>/dev/null | head -1 | while read libpath; do
+              if [ -f "$libpath" ]; then
+                copy_deps "$libpath"
+              fi
+            done
+          done
+          
           # Create AppRun script
           cat > AppDir/AppRun << 'APPRUN_EOF'
           #!/bin/bash
@@ -107,6 +140,8 @@ jobs:
           HERE=${SELF%/*}
           export PATH="${HERE}/usr/bin:${PATH}"
           export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+          export GDK_PIXBUF_MODULEDIR="${HERE}/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
+          export GDK_PIXBUF_MODULE_FILE="${HERE}/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
           cd "${HERE}/usr/bin"
           exec ./nipaplay "$@"
           APPRUN_EOF
@@ -126,6 +161,9 @@ jobs:
           if [ -f "icons/new-icon-apple.png" ]; then
             cp icons/new-icon-apple.png AppDir/playtorrio.png
           fi
+          
+          echo "AppDir size:"
+          du -sh AppDir
           
           # Build AppImage
           ARCH=x86_64 appimagetool --appimage-extract-and-run AppDir PlayTorrio-Linux-x64.AppImage
