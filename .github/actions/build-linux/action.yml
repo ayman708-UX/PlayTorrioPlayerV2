@@ -247,7 +247,31 @@ runs:
         GENERATED_APPIMAGE=$(find . -maxdepth 1 -name "*.AppImage" -not -name "linuxdeployqt*.AppImage" -print -quit) 
         if [ -n "$GENERATED_APPIMAGE" ]; then
           echo "Found generated AppImage: $GENERATED_APPIMAGE"
-          mv "$GENERATED_APPIMAGE" "${LINUX_BUILD_DIR}/${APPIMAGE_NAME}"
+          
+          # Extract the AppImage to fix the AppRun script
+          echo "Extracting AppImage to fix AppRun..."
+          chmod +x "$GENERATED_APPIMAGE"
+          ./"$GENERATED_APPIMAGE" --appimage-extract
+          
+          # Replace with our custom AppRun
+          echo "Replacing AppRun with custom script..."
+          cp "${ASSETS_LINUX_DIR}/AppRun" squashfs-root/AppRun
+          chmod +x squashfs-root/AppRun
+          
+          # Download appimagetool to repackage
+          echo "Downloading appimagetool..."
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          
+          # Repackage the AppImage
+          echo "Repackaging AppImage with fixed AppRun..."
+          ARCH=x86_64 ./appimagetool squashfs-root "${LINUX_BUILD_DIR}/${APPIMAGE_NAME}"
+          
+          # Clean up
+          rm -rf squashfs-root
+          rm -f appimagetool
+          rm -f "$GENERATED_APPIMAGE"
+          
           echo "AppImage created at ${LINUX_BUILD_DIR}/${APPIMAGE_NAME}"
         else
           echo "AppImage generation failed or file not found by find command!"
