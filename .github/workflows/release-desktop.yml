@@ -85,77 +85,50 @@ jobs:
       - name: Build Linux
         run: flutter build linux --release
       
-      - name: Install AppImage tools
+      - name: Install AppImageTool
         run: |
-          # Download linuxdeploy and linuxdeploy-plugin-appimage
-          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          wget https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage
-          chmod +x linuxdeploy-x86_64.AppImage
-          chmod +x linuxdeploy-plugin-appimage-x86_64.AppImage
-          
-          # Extract them to avoid FUSE requirement
-          ./linuxdeploy-x86_64.AppImage --appimage-extract
-          mv squashfs-root linuxdeploy-squashfs
-          ./linuxdeploy-plugin-appimage-x86_64.AppImage --appimage-extract
-          mv squashfs-root linuxdeploy-plugin-squashfs
+          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
       
-      - name: Create AppImage structure
+      - name: Create AppImage
         run: |
+          # Create AppDir structure
           mkdir -p AppDir/usr/bin
           mkdir -p AppDir/usr/lib
-          mkdir -p AppDir/usr/share/applications
-          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
           
-          # Debug: List what Flutter actually built
-          echo "=== Contents of build/linux/x64/release/bundle ==="
-          ls -la build/linux/x64/release/bundle/
-          
-          # Copy the Flutter bundle
+          # Copy Flutter bundle
           cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
           
-          # Debug: List what we copied
-          echo "=== Contents of AppDir/usr/bin ==="
-          ls -la AppDir/usr/bin/
-          
-          # Find and rename the executable
-          if [ -f "AppDir/usr/bin/nipaplay" ]; then
-            echo "Found nipaplay, renaming to playtorrio"
-            mv AppDir/usr/bin/nipaplay AppDir/usr/bin/playtorrio
-            chmod +x AppDir/usr/bin/playtorrio
-          else
-            echo "ERROR: nipaplay not found!"
-            echo "Looking for any executables..."
-            find AppDir/usr/bin -type f -executable
-          fi
-          
-          # Copy icon (if exists)
-          if [ -f "linux/playtorrio.png" ]; then
-            cp linux/playtorrio.png AppDir/usr/share/icons/hicolor/256x256/apps/playtorrio.png
-          elif [ -f "icons/new-icon-apple.png" ]; then
-            cp icons/new-icon-apple.png AppDir/usr/share/icons/hicolor/256x256/apps/playtorrio.png
-          fi
+          # Create AppRun script
+          cat > AppDir/AppRun << 'APPRUN_EOF'
+          #!/bin/bash
+          SELF=$(readlink -f "$0")
+          HERE=${SELF%/*}
+          export PATH="${HERE}/usr/bin:${PATH}"
+          export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+          cd "${HERE}/usr/bin"
+          exec ./nipaplay "$@"
+          APPRUN_EOF
+          chmod +x AppDir/AppRun
           
           # Create desktop file
-          cat > AppDir/usr/share/applications/playtorrio.desktop << 'EOF'
+          cat > AppDir/playtorrio.desktop << 'DESKTOP_EOF'
           [Desktop Entry]
           Name=PlayTorrio
-          Exec=playtorrio
+          Exec=AppRun
           Icon=playtorrio
           Type=Application
           Categories=AudioVideo;Video;Player;
-          Comment=Video Player with Danmaku Support
-          Terminal=false
-          EOF
+          DESKTOP_EOF
           
-          # Final debug
-          echo "=== Final check for playtorrio executable ==="
-          ls -la AppDir/usr/bin/playtorrio || echo "playtorrio NOT FOUND!"
-      
-      - name: Build AppImage
-        run: |
-          export OUTPUT=PlayTorrio-Linux-x64.AppImage
-          export ARCH=x86_64
-          ./linuxdeploy-squashfs/AppRun --appdir AppDir --output appimage
+          # Copy icon if exists
+          if [ -f "icons/new-icon-apple.png" ]; then
+            cp icons/new-icon-apple.png AppDir/playtorrio.png
+          fi
+          
+          # Build AppImage
+          ARCH=x86_64 appimagetool --appimage-extract-and-run AppDir PlayTorrio-Linux-x64.AppImage
       
       - name: Upload Linux AppImage artifact
         uses: actions/upload-artifact@v4
