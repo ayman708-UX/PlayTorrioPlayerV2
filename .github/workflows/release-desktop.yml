@@ -85,16 +85,66 @@ jobs:
       - name: Build Linux
         run: flutter build linux --release
       
-      - name: Create Linux artifact
+      - name: Install AppImage tools
         run: |
-          cd build/linux/x64/release
-          tar -czf ../../../../PlayTorrio-Linux-x64.tar.gz bundle
+          wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+          sudo mv appimagetool /usr/local/bin/
       
-      - name: Upload Linux artifact
+      - name: Create AppImage structure
+        run: |
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/lib
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          
+          # Copy the Flutter bundle
+          cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
+          
+          # Copy icon (if exists)
+          if [ -f "linux/playtorrio.png" ]; then
+            cp linux/playtorrio.png AppDir/usr/share/icons/hicolor/256x256/apps/playtorrio.png
+            cp linux/playtorrio.png AppDir/playtorrio.png
+          elif [ -f "icons/new-icon-apple.png" ]; then
+            cp icons/new-icon-apple.png AppDir/usr/share/icons/hicolor/256x256/apps/playtorrio.png
+            cp icons/new-icon-apple.png AppDir/playtorrio.png
+          fi
+          
+          # Create desktop file
+          cat > AppDir/usr/share/applications/playtorrio.desktop << 'EOF'
+          [Desktop Entry]
+          Name=PlayTorrio
+          Exec=playtorrio
+          Icon=playtorrio
+          Type=Application
+          Categories=AudioVideo;Video;Player;
+          Comment=Video Player with Danmaku Support
+          Terminal=false
+          EOF
+          
+          # Create AppRun script
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          SELF=$(readlink -f "$0")
+          HERE=${SELF%/*}
+          export PATH="${HERE}/usr/bin:${PATH}"
+          export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+          exec "${HERE}/usr/bin/playtorrio" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          
+          # Copy desktop file to root
+          cp AppDir/usr/share/applications/playtorrio.desktop AppDir/
+      
+      - name: Build AppImage
+        run: |
+          ARCH=x86_64 appimagetool AppDir PlayTorrio-Linux-x64.AppImage
+      
+      - name: Upload Linux AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PlayTorrio-Linux-x64
-          path: PlayTorrio-Linux-x64.tar.gz
+          name: PlayTorrio-Linux-x64-AppImage
+          path: PlayTorrio-Linux-x64.AppImage
 
   create-release:
     needs: [build-windows, build-macos, build-linux]
@@ -124,12 +174,18 @@ jobs:
           body: |
             ## PlayTorrio Desktop Release
             
-            Portable builds for Windows, macOS (Universal), and Linux.
+            Portable builds for Windows, macOS (Universal), and Linux (AppImage).
             
             ### Downloads
             - **Windows**: `PlayTorrio-Windows-x64.zip` - Extract and run `PlayTorrio.exe`
             - **macOS**: `PlayTorrio-macOS-Universal.zip` - Extract and run `PlayTorrio.app` (Universal: Intel + Apple Silicon)
-            - **Linux**: `PlayTorrio-Linux-x64.tar.gz` - Extract and run `bundle/playtorrio`
+            - **Linux**: `PlayTorrio-Linux-x64.AppImage` - Make executable and run (includes all dependencies)
+            
+            ### Linux AppImage Usage
+            ```bash
+            chmod +x PlayTorrio-Linux-x64.AppImage
+            ./PlayTorrio-Linux-x64.AppImage
+            ```
             
             ### IPC Integration
             All builds support IPC mode for Electron integration. Launch with `--ipc` flag.
@@ -138,12 +194,12 @@ jobs:
             ### Requirements
             - **Windows**: Windows 10 or later
             - **macOS**: macOS 10.14 or later
-            - **Linux**: GTK3 required (`sudo apt-get install libgtk-3-0`)
+            - **Linux**: No additional dependencies required (AppImage includes everything)
           draft: false
           prerelease: false
           files: |
             artifacts/PlayTorrio-Windows-x64/PlayTorrio-Windows-x64.zip
             artifacts/PlayTorrio-macOS-Universal/PlayTorrio-macOS-Universal.zip
-            artifacts/PlayTorrio-Linux-x64/PlayTorrio-Linux-x64.tar.gz
+            artifacts/PlayTorrio-Linux-x64-AppImage/PlayTorrio-Linux-x64.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
