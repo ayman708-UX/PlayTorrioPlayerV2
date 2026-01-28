@@ -94,9 +94,62 @@ jobs:
       - name: Package Linux Bundle
         run: |
           cd build/linux/x64/release/bundle
-          tar -czf ../../../../../PlayTorrio-Linux-x64.tar.gz *
-          cd ../../../../../
-          echo "Created PlayTorrio-Linux-x64.tar.gz"
+          
+          # Create a wrapper script that sets LD_LIBRARY_PATH
+          cat > NipaPlay.sh << 'EOF'
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
+exec "${SCRIPT_DIR}/NipaPlay" "$@"
+EOF
+          chmod +x NipaPlay.sh
+          
+          # Copy all system dependencies
+          echo "Bundling system dependencies..."
+          mkdir -p lib_temp
+          
+          # Function to copy library and its dependencies recursively
+          copy_lib_recursive() {
+            local lib=$1
+            local libname=$(basename "$lib")
+            
+            # Skip if already copied
+            if [ -f "lib_temp/$libname" ]; then
+              return
+            fi
+            
+            # Copy the library
+            if [ -f "$lib" ]; then
+              cp "$lib" lib_temp/ 2>/dev/null || true
+              
+              # Get and copy dependencies
+              ldd "$lib" 2>/dev/null | grep "=> /" | awk '{print $3}' | while read dep; do
+                if [ -f "$dep" ]; then
+                  copy_lib_recursive "$dep"
+                fi
+              done
+            fi
+          }
+          
+          # Copy dependencies for all bundled .so files
+          for so_file in lib/*.so*; do
+            if [ -f "$so_file" ]; then
+              copy_lib_recursive "$so_file"
+            fi
+          done
+          
+          # Copy dependencies for the main binary
+          copy_lib_recursive "NipaPlay"
+          
+          # Move bundled libs to lib directory
+          cp -n lib_temp/* lib/ 2>/dev/null || true
+          rm -rf lib_temp
+          
+          # Create tar.gz
+          cd ..
+          tar -czf ../../../../PlayTorrio-Linux-x64.tar.gz bundle/
+          cd ../../../../
+          echo "Created PlayTorrio-Linux-x64.tar.gz with bundled dependencies"
       
       - name: Upload Linux Bundle
         uses: actions/upload-artifact@v4
