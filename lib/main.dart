@@ -161,6 +161,14 @@ class _SimplePlayerAppState extends State<SimplePlayerApp> {
             primary: Color(0xFF9d4edd),
             secondary: Color(0xFFc77dff),
           ),
+          iconButtonTheme: IconButtonThemeData(
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              overlayColor: Colors.transparent,
+              splashFactory: NoSplash.splashFactory,
+            ),
+          ),
         ),
         home: const PlayVideoPage(),
       ),

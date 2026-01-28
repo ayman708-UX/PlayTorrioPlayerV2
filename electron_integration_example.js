@@ -153,10 +153,13 @@ class PlayTorrioBridge {
    * Add an external subtitle
    * @param {string} name - Subtitle name (e.g., "English", "Spanish")
    * @param {string} url - Subtitle URL
+   * @param {string} comment - Optional comment/description (e.g., "OpenSubtitles", "Manual Upload")
    * @returns {Promise<{success: boolean, index: number}>}
    */
-  async addExternalSubtitle(name, url) {
-    return this.sendCommand('add_external_subtitle', { name, url });
+  async addExternalSubtitle(name, url, comment = '') {
+    const data = { name, url };
+    if (comment) data.comment = comment;
+    return this.sendCommand('add_external_subtitle', data);
   }
 
   /**
@@ -303,14 +306,14 @@ async function example() {
     await player.loadVideo('https://example.com/video.mp4');
     console.log('Video loaded!');
 
-    // Add multiple external subtitles
-    const sub1 = await player.addExternalSubtitle('English', 'https://example.com/en.srt');
+    // Add multiple external subtitles with comments
+    const sub1 = await player.addExternalSubtitle('English', 'https://example.com/en.srt', 'OpenSubtitles - Official');
     console.log('English subtitle added at index:', sub1.index);
     
-    const sub2 = await player.addExternalSubtitle('Spanish', 'https://example.com/es.srt');
+    const sub2 = await player.addExternalSubtitle('Spanish', 'https://example.com/es.srt', 'Community Contributed');
     console.log('Spanish subtitle added at index:', sub2.index);
     
-    const sub3 = await player.addExternalSubtitle('French', 'https://example.com/fr.srt');
+    const sub3 = await player.addExternalSubtitle('French', 'https://example.com/fr.srt', 'Manual Upload');
     console.log('French subtitle added at index:', sub3.index);
 
     // Select the Spanish subtitle (index 1)

@@ -322,6 +322,11 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                   onPressed: videoState.hasVideo
                       ? () => videoState.togglePlayPause()
                       : null,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    overlayColor: Colors.white.withOpacity(0.1),
+                    splashFactory: NoSplash.splashFactory,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 _buildVolumeControl(videoState),
@@ -350,6 +355,11 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                     );
                   },
                   tooltip: 'Open URL',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    overlayColor: Colors.white.withOpacity(0.1),
+                    splashFactory: NoSplash.splashFactory,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.audiotrack, color: Colors.white, size: 38),
@@ -357,6 +367,11 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                       ? () => _showAudioMenu(context, videoState)
                       : null,
                   tooltip: 'Audio Tracks',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    overlayColor: Colors.white.withOpacity(0.1),
+                    splashFactory: NoSplash.splashFactory,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.subtitles, color: Colors.white, size: 38),
@@ -364,6 +379,11 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                       ? () => _showSubtitleMenu(context, videoState)
                       : null,
                   tooltip: 'Subtitles',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    overlayColor: Colors.white.withOpacity(0.1),
+                    splashFactory: NoSplash.splashFactory,
+                  ),
                 ),
                 IconButton(
                   icon: Icon(
@@ -375,6 +395,11 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                   ),
                   onPressed: () => videoState.toggleFullscreen(),
                   tooltip: 'Fullscreen',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    overlayColor: Colors.white.withOpacity(0.1),
+                    splashFactory: NoSplash.splashFactory,
+                  ),
                 ),
               ],
             ),
@@ -681,11 +706,12 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                                     showDialog(
                                       context: context,
                                       builder: (context) => ExternalSubtitleDialog(
-                                        onAdd: (name, url) {
+                                        onAdd: (name, url, comment) {
                                           setState(() {
                                             videoState.ipcExternalSubtitles.add({
                                               'name': name,
                                               'url': url,
+                                              if (comment.isNotEmpty) 'comment': comment,
                                             });
                                           });
                                           
@@ -749,6 +775,7 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                               final extIndex = index - 2;
                               final extSub = videoState.ipcExternalSubtitles[extIndex];
                               final isSelected = _activeExternalSubtitle == extSub['url'];
+                              final comment = extSub['comment'] as String?;
                               
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 6),
@@ -769,6 +796,15 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                                           : FontWeight.normal,
                                     ),
                                   ),
+                                  subtitle: comment != null && comment.isNotEmpty
+                                      ? Text(
+                                          comment,
+                                          style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                          ),
+                                        )
+                                      : null,
                                   trailing: IconButton(
                                     icon: const Icon(Icons.delete, color: Colors.white54, size: 20),
                                     onPressed: () {

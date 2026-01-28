@@ -263,7 +263,8 @@ Add an external subtitle file. You can add multiple external subtitles by callin
   "id": "cmd_6",
   "data": {
     "name": "English Subtitles",
-    "url": "https://example.com/subtitles.srt"
+    "url": "https://example.com/subtitles.srt",
+    "comment": "OpenSubtitles - High Quality"
   }
 }
 ```
@@ -271,6 +272,7 @@ Add an external subtitle file. You can add multiple external subtitles by callin
 **Parameters:**
 - `name` (string, required): Display name for the subtitle
 - `url` (string, required): Subtitle file URL
+- `comment` (string, optional): Additional description or source information (e.g., "OpenSubtitles", "Manual Upload", "Community Contributed")
 
 **Response:**
 ```json
@@ -288,18 +290,20 @@ Add an external subtitle file. You can add multiple external subtitles by callin
 
 **Example - Adding Multiple Subtitles:**
 ```javascript
-// Add English subtitles
-await player.addExternalSubtitle('English', 'https://example.com/en.srt');
+// Add English subtitles with comment
+await player.addExternalSubtitle('English', 'https://example.com/en.srt', 'OpenSubtitles - Official');
 // Returns: { success: true, index: 0 }
 
-// Add Spanish subtitles
-await player.addExternalSubtitle('Spanish', 'https://example.com/es.srt');
+// Add Spanish subtitles with comment
+await player.addExternalSubtitle('Spanish', 'https://example.com/es.srt', 'Community Contributed');
 // Returns: { success: true, index: 1 }
 
-// Add French subtitles
+// Add French subtitles without comment
 await player.addExternalSubtitle('French', 'https://example.com/fr.srt');
 // Returns: { success: true, index: 2 }
 ```
+
+**Note:** The comment parameter is displayed in the subtitle menu below the subtitle name, helping users identify the source or quality of each subtitle track.
 
 ---
 
@@ -393,8 +397,8 @@ Get the current player state.
     "volume": 1.0,
     "isFullscreen": false,
     "externalSubtitles": [
-      { "name": "English", "url": "https://example.com/en.srt" },
-      { "name": "Spanish", "url": "https://example.com/es.srt" }
+      { "name": "English", "url": "https://example.com/en.srt", "comment": "OpenSubtitles - Official" },
+      { "name": "Spanish", "url": "https://example.com/es.srt", "comment": "Community Contributed" }
     ]
   }
 }
@@ -471,7 +475,7 @@ Sent whenever the player state changes (playing, paused, position update, etc.).
 - `duration` (number): Total video duration in milliseconds
 - `volume` (number): Current volume level (0.0 to 1.0)
 - `isFullscreen` (boolean): Whether player is in fullscreen mode
-- `externalSubtitles` (array): List of added external subtitles with name and url
+- `externalSubtitles` (array): List of added external subtitles with name, url, and optional comment
 
 ## Error Handling
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 class ExternalSubtitleDialog extends StatefulWidget {
-  final Function(String name, String url) onAdd;
+  final Function(String name, String url, String comment) onAdd;
 
   const ExternalSubtitleDialog({
     super.key,
@@ -16,17 +16,20 @@ class ExternalSubtitleDialog extends StatefulWidget {
 class _ExternalSubtitleDialogState extends State<ExternalSubtitleDialog> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _urlController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
   void _submit() {
     final name = _nameController.text.trim();
     final url = _urlController.text.trim();
+    final comment = _commentController.text.trim();
 
     if (name.isEmpty || url.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -38,7 +41,7 @@ class _ExternalSubtitleDialogState extends State<ExternalSubtitleDialog> {
       return;
     }
 
-    widget.onAdd(name, url);
+    widget.onAdd(name, url, comment);
     Navigator.of(context).pop();
   }
 
@@ -146,6 +149,52 @@ class _ExternalSubtitleDialogState extends State<ExternalSubtitleDialog> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'https://example.com/subtitle.srt',
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                    filled: true,
+                    fillColor: Colors.black.withOpacity(0.3),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: const Color(0xFF9d4edd).withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: const Color(0xFF9d4edd).withOpacity(0.3),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF9d4edd),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Comment input
+                const Text(
+                  'Comment (Optional)',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _commentController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Source: OpenSubtitles',
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                     filled: true,
                     fillColor: Colors.black.withOpacity(0.3),

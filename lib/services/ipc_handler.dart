@@ -137,13 +137,18 @@ class IPCHandler {
   void _handleAddExternalSubtitle(String? id, Map<String, dynamic>? data) {
     final name = data?['name'] as String?;
     final url = data?['url'] as String?;
+    final comment = data?['comment'] as String?; // Optional comment/description
 
     if (name == null || url == null) {
       _bridge.sendError('invalid_params', 'Missing name or url parameter');
       return;
     }
 
-    videoPlayerState.ipcExternalSubtitles.add({'name': name, 'url': url});
+    videoPlayerState.ipcExternalSubtitles.add({
+      'name': name,
+      'url': url,
+      if (comment != null && comment.isNotEmpty) 'comment': comment,
+    });
     videoPlayerState.notifyListeners(); // Notify UI to update
 
     if (id != null) {
