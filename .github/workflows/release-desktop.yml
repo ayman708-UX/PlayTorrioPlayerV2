@@ -132,7 +132,7 @@ jobs:
         run: |
           export OUTPUT=PlayTorrio-Linux-x64.AppImage
           export ARCH=x86_64
-          ./linuxdeploy-squashfs/AppRun --appdir AppDir --output appimage --plugin appimage
+          ./linuxdeploy-squashfs/AppRun --appdir AppDir --output appimage
       
       - name: Upload Linux AppImage artifact
         uses: actions/upload-artifact@v4
