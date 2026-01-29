@@ -185,17 +185,18 @@ jobs:
           body: |
             ## PlayTorrio Desktop Release
             
-            Portable builds for Windows, macOS (Universal), and Linux (AppImage).
+            Portable builds for Windows, macOS (Universal), and Linux.
             
             ### Downloads
             - **Windows**: `PlayTorrio-Windows-x64.zip` - Extract and run `PlayTorrio.exe`
             - **macOS**: `PlayTorrio-macOS-Universal.zip` - Extract and run `PlayTorrio.app` (Universal: Intel + Apple Silicon)
-            - **Linux**: `PlayTorrio-Linux-x64.AppImage` - Make executable and run (includes all dependencies)
+            - **Linux**: `PlayTorrio-Linux-x64.tar.gz` - Extract and run `./bundle/NipaPlay.sh` (includes all dependencies)
             
-            ### Linux AppImage Usage
+            ### Linux Bundle Usage
             ```bash
-            chmod +x PlayTorrio-Linux-x64.AppImage
-            ./PlayTorrio-Linux-x64.AppImage
+            tar -xzf PlayTorrio-Linux-x64.tar.gz
+            cd bundle
+            ./NipaPlay.sh
             ```
             
             ### IPC Integration
@@ -205,12 +206,12 @@ jobs:
             ### Requirements
             - **Windows**: Windows 10 or later
             - **macOS**: macOS 10.14 or later
-            - **Linux**: No additional dependencies required (AppImage includes everything)
+            - **Linux**: No additional dependencies required (bundle includes everything)
           draft: false
           prerelease: false
           files: |
             artifacts/PlayTorrio-Windows-x64/PlayTorrio-Windows-x64.zip
             artifacts/PlayTorrio-macOS-Universal/PlayTorrio-macOS-Universal.zip
-            artifacts/PlayTorrio-Linux-x64-AppImage/PlayTorrio-Linux-x64.AppImage
+            artifacts/PlayTorrio-Linux-x64-Bundle/PlayTorrio-Linux-x64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
