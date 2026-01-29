@@ -100,6 +100,9 @@ jobs:
           #!/bin/bash
           SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
           export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
+          # Disable mpv config to avoid assertion errors
+          export MPV_HOME="${SCRIPT_DIR}/.mpv_dummy"
+          mkdir -p "${MPV_HOME}"
           exec "${SCRIPT_DIR}/NipaPlay" "$@"
           WRAPPER_SCRIPT
           chmod +x NipaPlay.sh
