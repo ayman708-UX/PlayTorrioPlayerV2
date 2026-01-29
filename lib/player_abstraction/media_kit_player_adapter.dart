@@ -68,11 +68,6 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
                     : null,
             bufferSize: 32 * 1024 * 1024,
             logLevel: MPVLogLevel.debug,
-            // Disable mpv config loading to prevent assertion errors on Linux
-            osc: false,
-            ready: () {
-              // Additional mpv options to disable config system
-            },
           ),
         ) {
     _controller = VideoController(
@@ -81,7 +76,6 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
         enableHardwareAcceleration: true,
       ),
     );
-    _disableMpvConfig();
     _initializeHardwareDecoding();
     _initializeCodecs();
     unawaited(_setupSubtitleFonts());
@@ -91,20 +85,6 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
     _addEventListeners();
     _setupDefaultTrackSelectionBehavior();
     _initializeTicker();
-  }
-
-  void _disableMpvConfig() {
-    try {
-      final dynamic platform = _player.platform;
-      if (platform != null) {
-        // Disable mpv config file loading to prevent assertion errors
-        platform.setProperty?.call('config', 'no');
-        platform.setProperty?.call('load-scripts', 'no');
-        debugPrint('MediaKit: Disabled mpv config loading to prevent assertion errors');
-      }
-    } catch (e) {
-      debugPrint('MediaKit: Failed to disable mpv config: $e');
-    }
   }
 
   void _initializeHardwareDecoding() {
