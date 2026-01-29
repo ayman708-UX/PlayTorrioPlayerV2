@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart'; // 用于 debugPrint
 import 'package:nipaplay/utils/system_resource_monitor.dart'; // 导入系统资源监控器
 import 'dart:async'; // 导入dart:async库
+import 'dart:io'; // 导入dart:io库用于Platform检测
 
 // Define available player types if you plan to support more than one.
 // For now, it defaults to MDK or could take a parameter.
