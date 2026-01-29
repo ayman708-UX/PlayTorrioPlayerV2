@@ -64,7 +64,7 @@ jobs:
           path: PlayTorrio-macOS-Universal.zip
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       
@@ -74,91 +74,27 @@ jobs:
           channel: 'stable'
           cache: true
       
-      - name: Install Linux dependencies
+      - name: Get version from pubspec.yaml
+        id: version
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libkeybinder-3.0-dev libasound2-dev libmpv-dev
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
       
       - name: Install dependencies
         run: flutter pub get
       
-      - name: Build Linux
-        run: flutter build linux --release
+      - name: Build Linux using original NipaPlay build action
+        uses: ./.github/actions/build-linux
+        with:
+          app-version: ${{ steps.version.outputs.version }}
+          arch: 'amd64'
       
-      - name: Install AppImageTool
-        run: |
-          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-          sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
-      
-      - name: Package Linux Bundle
-        run: |
-          cd build/linux/x64/release/bundle
-          
-          # Create a wrapper script that sets LD_LIBRARY_PATH
-          cat > NipaPlay.sh << 'WRAPPER_SCRIPT'
-          #!/bin/bash
-          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          export LD_LIBRARY_PATH="${SCRIPT_DIR}/lib:${LD_LIBRARY_PATH}"
-          # Disable mpv config to avoid assertion errors
-          export MPV_HOME="${SCRIPT_DIR}/.mpv_dummy"
-          mkdir -p "${MPV_HOME}"
-          exec "${SCRIPT_DIR}/NipaPlay" "$@"
-          WRAPPER_SCRIPT
-          chmod +x NipaPlay.sh
-          
-          # Copy all system dependencies
-          echo "Bundling system dependencies..."
-          mkdir -p lib_temp
-          
-          # Function to copy library and its dependencies recursively
-          copy_lib_recursive() {
-            local lib=$1
-            local libname=$(basename "$lib")
-            
-            # Skip if already copied
-            if [ -f "lib_temp/$libname" ]; then
-              return
-            fi
-            
-            # Copy the library
-            if [ -f "$lib" ]; then
-              cp "$lib" lib_temp/ 2>/dev/null || true
-              
-              # Get and copy dependencies
-              ldd "$lib" 2>/dev/null | grep "=> /" | awk '{print $3}' | while read dep; do
-                if [ -f "$dep" ]; then
-                  copy_lib_recursive "$dep"
-                fi
-              done
-            fi
-          }
-          
-          # Copy dependencies for all bundled .so files
-          for so_file in lib/*.so*; do
-            if [ -f "$so_file" ]; then
-              copy_lib_recursive "$so_file"
-            fi
-          done
-          
-          # Copy dependencies for the main binary
-          copy_lib_recursive "NipaPlay"
-          
-          # Move bundled libs to lib directory
-          cp -n lib_temp/* lib/ 2>/dev/null || true
-          rm -rf lib_temp
-          
-          # Create tar.gz
-          cd ..
-          tar -czf ../../../../PlayTorrio-Linux-x64.tar.gz bundle/
-          cd ../../../../
-          echo "Created PlayTorrio-Linux-x64.tar.gz with bundled dependencies"
-      
-      - name: Upload Linux Bundle
+      - name: Upload Linux AppImage
         uses: actions/upload-artifact@v4
         with:
-          name: PlayTorrio-Linux-x64-Bundle
-          path: PlayTorrio-Linux-x64.tar.gz
+          name: PlayTorrio-Linux-x64-AppImage
+          path: build/linux/NipaPlay-${{ steps.version.outputs.version }}-Linux-amd64.AppImage
 
   create-release:
     needs: [build-windows, build-macos, build-linux]
@@ -193,13 +129,12 @@ jobs:
             ### Downloads
             - **Windows**: `PlayTorrio-Windows-x64.zip` - Extract and run `PlayTorrio.exe`
             - **macOS**: `PlayTorrio-macOS-Universal.zip` - Extract and run `PlayTorrio.app` (Universal: Intel + Apple Silicon)
-            - **Linux**: `PlayTorrio-Linux-x64.tar.gz` - Extract and run `./bundle/NipaPlay.sh` (includes all dependencies)
+            - **Linux**: `NipaPlay-${{ steps.version.outputs.version }}-Linux-amd64.AppImage` - Make executable and run
             
-            ### Linux Bundle Usage
+            ### Linux AppImage Usage
             ```bash
-            tar -xzf PlayTorrio-Linux-x64.tar.gz
-            cd bundle
-            ./NipaPlay.sh
+            chmod +x NipaPlay-${{ steps.version.outputs.version }}-Linux-amd64.AppImage
+            ./NipaPlay-${{ steps.version.outputs.version }}-Linux-amd64.AppImage
             ```
             
             ### IPC Integration
@@ -209,12 +144,12 @@ jobs:
             ### Requirements
             - **Windows**: Windows 10 or later
             - **macOS**: macOS 10.14 or later
-            - **Linux**: No additional dependencies required (bundle includes everything)
+            - **Linux**: No additional dependencies required (AppImage is self-contained)
           draft: false
           prerelease: false
           files: |
             artifacts/PlayTorrio-Windows-x64/PlayTorrio-Windows-x64.zip
             artifacts/PlayTorrio-macOS-Universal/PlayTorrio-macOS-Universal.zip
-            artifacts/PlayTorrio-Linux-x64-Bundle/PlayTorrio-Linux-x64.tar.gz
+            artifacts/PlayTorrio-Linux-x64-AppImage/NipaPlay-${{ steps.version.outputs.version }}-Linux-amd64.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
