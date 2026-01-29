@@ -3,11 +3,9 @@
 
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
-export PATH="${HERE}/usr/bin:${PATH}"
-export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
 
-# Change to the binary directory
-cd "${HERE}/usr/bin"
+# Set library path
+export LD_LIBRARY_PATH="${HERE}/lib:${LD_LIBRARY_PATH}"
 
-# Execute the binary (capital N, capital P)
-exec ./NipaPlay "$@"
+# Execute the binary directly from AppImage root
+exec "${HERE}/NipaPlay" "$@"
