@@ -34,6 +34,15 @@ class PlayerFactory {
       debugPrint('[PlayerFactory] Web平台，强制使用 Video Player 内核');
       return;
     }
+    
+    // Force FVP (MDK) on Linux to avoid media_kit libmpv issues
+    if (!kIsWeb && Platform.isLinux) {
+      _cachedKernelType = PlayerKernelType.mdk;
+      _hasLoadedSettings = true;
+      debugPrint('[PlayerFactory] Linux平台，强制使用 FVP (MDK) 内核以避免 libmpv 问题');
+      return;
+    }
+    
     try {
       final prefs = await SharedPreferences.getInstance();
       final kernelTypeIndex = prefs.getInt(_playerKernelTypeKey);
@@ -43,7 +52,7 @@ class PlayerFactory {
         debugPrint('[PlayerFactory] 预加载内核设置: ${_cachedKernelType.toString()}');
       } else {
         _cachedKernelType = PlayerKernelType.mediaKit;
-        debugPrint('[PlayerFactory] 无内核设置，使用默认: MDK');
+        debugPrint('[PlayerFactory] 无内核设置，使用默认: Media Kit');
       }
       
       _hasLoadedSettings = true;
