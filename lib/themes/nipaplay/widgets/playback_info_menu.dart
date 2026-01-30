@@ -237,10 +237,10 @@ style: TextStyle(
     final progress = videoState.progress;
 
     return [
-      InfoItem('状态', _getStatusText(status), _isStatusActive(status)),
-      InfoItem('进度', '${_formatDuration(position)} / ${_formatDuration(duration)}'),
-      InfoItem('百分比', '${(progress * 100).toStringAsFixed(1)}%'),
-      InfoItem('播放速度', '${videoState.playbackRate}x'),
+      InfoItem('Status', _getStatusText(status), _isStatusActive(status)),
+      InfoItem('Progress', '${_formatDuration(position)} / ${_formatDuration(duration)}'),
+      InfoItem('Percentage', '${(progress * 100).toStringAsFixed(1)}%'),
+      InfoItem('Playback Speed', '${videoState.playbackRate}x'),
     ];
   }
 
@@ -614,21 +614,21 @@ style: TextStyle(
   String _getStatusText(PlayerStatus status) {
     switch (status) {
       case PlayerStatus.idle:
-        return '空闲';
+        return 'Idle';
       case PlayerStatus.loading:
-        return '加载中';
+        return 'Loading';
       case PlayerStatus.recognizing:
-        return '识别中';
+        return 'Recognizing';
       case PlayerStatus.ready:
-        return '就绪';
+        return 'Ready';
       case PlayerStatus.playing:
-        return '播放中';
+        return 'Playing';
       case PlayerStatus.paused:
-        return '已暂停';
+        return 'Paused';
       case PlayerStatus.disposed:
-        return '已释放';
+        return 'Disposed';
       case PlayerStatus.error:
-        return '错误';
+        return 'Error';
     }
   }
 
@@ -666,15 +666,15 @@ style: TextStyle(
   String _formatChannels(int channels) {
     switch (channels) {
       case 1:
-        return '单声道 (1.0)';
+        return 'Mono (1.0)';
       case 2:
-        return '立体声 (2.0)';
+        return 'Stereo (2.0)';
       case 6:
-        return '5.1环绕声';
+        return '5.1 Surround';
       case 8:
-        return '7.1环绕声';
+        return '7.1 Surround';
       default:
-        return '$channels 声道';
+        return '$channels Channels';
     }
   }
 

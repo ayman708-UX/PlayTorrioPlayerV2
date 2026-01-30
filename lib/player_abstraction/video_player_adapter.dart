@@ -306,9 +306,9 @@ class VideoPlayerAdapter implements AbstractPlayer, TickerProvider {
              e.message?.contains('无法打开: 此媒体可能已损坏') == true ||
              e.message?.contains('OSStatus错误-12848') == true 
             )) {
-          String errMsg = "视频文件可能已损坏或无法读取。";
+          String errMsg = "Video file may be damaged or unreadable.";
           if (e.message?.contains('不支持此媒体的格式') == true || e.message?.contains('OSStatus错误-12847') == true) {
-            errMsg = "当前播放内核不支持此视频格式。";
+            errMsg = "Current player kernel does not support this video format.";
           }
           print('[VideoPlayerAdapter] 特定视频错误(updateTexture). 设置mediaInfo.duration=0, specificErrorMessage: $errMsg, textureId=null.');
           _mediaInfo = PlayerMediaInfo(
@@ -460,9 +460,9 @@ class VideoPlayerAdapter implements AbstractPlayer, TickerProvider {
        e.message?.contains('无法打开: 此媒体可能已损坏') == true ||
        e.message?.contains('OSStatus错误-12848') == true 
       )) {
-        String errMsg = "视频文件可能已损坏或无法读取。";
+        String errMsg = "Video file may be damaged or unreadable.";
         if (e.message?.contains('不支持此媒体的格式') == true || e.message?.contains('OSStatus错误-12847') == true) {
-          errMsg = "当前播放内核不支持此视频格式。";
+          errMsg = "Current player kernel does not support this video format.";
         }
         print('[VideoPlayerAdapter] 特定视频错误(prepare). 设置mediaInfo.duration=0, specificErrorMessage: $errMsg, textureId=null.');
         _mediaInfo = PlayerMediaInfo(

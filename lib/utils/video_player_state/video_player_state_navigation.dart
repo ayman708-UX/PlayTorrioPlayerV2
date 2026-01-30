@@ -615,7 +615,7 @@ extension VideoPlayerStateNavigation on VideoPlayerState {
             } else {
               final String technicalDetail =
                   '(pos: $playerPosition, dur: $playerDuration)';
-              userMessage = '视频文件 "$baseName" 可能已损坏或无法读取 $technicalDetail';
+              userMessage = 'Video file "$baseName" may be damaged or unreadable $technicalDetail';
             }
 
             debugPrint(

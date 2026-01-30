@@ -113,16 +113,16 @@ class _VideoPlayerUIState extends State<VideoPlayerUI>
           if (mounted && _videoPlayerStateInstance != null) {
             // 获取当前的错误信息用于显示
             final String errorMessage =
-                _videoPlayerStateInstance!.error ?? "发生未知播放错误，已停止播放。";
+                _videoPlayerStateInstance!.error ?? "Unknown playback error occurred, playback stopped.";
 
             // 显示 BlurDialog
             BlurDialog.show<void>(
               context: context, // 使用 VideoPlayerUI 的 context
-              title: '播放错误',
+              title: 'Playback Error',
               content: errorMessage,
               actions: [
                 TextButton(
-                  child: const Text('确定'),
+                  child: const Text('OK'),
                   onPressed: () {
                     // 1. Pop the dialog
                     //    这里的 context 是 BlurDialog.show 内部创建的用于对话框的 context

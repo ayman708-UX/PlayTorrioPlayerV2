@@ -1550,44 +1550,48 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
 
   /// 处理流媒体特定错误
   void _handleStreamingError(dynamic error) {
-    if (_currentMedia.contains('jellyfin://') ||
-        _currentMedia.contains('emby://')) {
-      //debugPrint('MediaKitAdapter: 检测到流媒体错误，尝试特殊处理: $error');
+    // For streaming URLs (including localhost streaming), always attempt retry first
+    if (_currentMedia.contains('http://') || _currentMedia.contains('https://') ||
+        _currentMedia.contains('jellyfin://') || _currentMedia.contains('emby://')) {
+      debugPrint('MediaKitAdapter: Detected streaming error, attempting retry: $error');
 
-      // 检查是否是网络连接问题
+      // Check if it's a network connection issue
       if (error.toString().contains('network') ||
           error.toString().contains('connection') ||
-          error.toString().contains('timeout')) {
-        //debugPrint('MediaKitAdapter: 流媒体网络连接错误，建议检查网络连接和服务器状态');
+          error.toString().contains('timeout') ||
+          error.toString().contains('damaged') ||
+          error.toString().contains('unreadable') ||
+          error.toString().contains('pos: 0, dur: 0')) {
+        debugPrint('MediaKitAdapter: Streaming connection error, will retry');
         _mediaInfo =
-            _mediaInfo.copyWith(specificErrorMessage: '流媒体连接失败，请检查网络连接和服务器状态');
-        _attemptJellyfinRetry('网络连接错误');
+            _mediaInfo.copyWith(specificErrorMessage: 'Streaming connection failed, retrying...');
+        _attemptJellyfinRetry('Network connection error');
       }
-      // 检查是否是认证问题
+      // Check if it's an authentication issue
       else if (error.toString().contains('auth') ||
           error.toString().contains('unauthorized') ||
           error.toString().contains('401') ||
           error.toString().contains('403')) {
-        //debugPrint('MediaKitAdapter: 流媒体认证错误，请检查API密钥和权限');
+        debugPrint('MediaKitAdapter: Streaming authentication error, check API key and permissions');
         _mediaInfo =
-            _mediaInfo.copyWith(specificErrorMessage: '流媒体认证失败，请检查API密钥和访问权限');
-        // 认证错误不重试，因为重试也不会成功
+            _mediaInfo.copyWith(specificErrorMessage: 'Streaming authentication failed, check API key and access permissions');
+        // Don't retry authentication errors as they won't succeed
       }
-      // 检查是否是格式不支持
+      // Check if it's a format not supported issue
       else if (error.toString().contains('format') ||
           error.toString().contains('codec') ||
           error.toString().contains('unsupported')) {
-        //debugPrint('MediaKitAdapter: 流媒体格式不支持，可能需要转码');
+        debugPrint('MediaKitAdapter: Streaming format not supported, may need transcoding');
         _mediaInfo = _mediaInfo.copyWith(
-            specificErrorMessage: '当前播放内核不支持此流媒体格式，请尝试在服务器端启用转码');
-        // 格式不支持不重试
+            specificErrorMessage: 'Current player kernel does not support this streaming format, try enabling transcoding on the server');
+        // Don't retry format errors
       }
-      // 其他流媒体错误
+      // Other streaming errors - retry them
       else {
-        //debugPrint('MediaKitAdapter: 未知流媒体错误');
+        debugPrint('MediaKitAdapter: Unknown streaming error, will retry');
         _mediaInfo =
-            _mediaInfo.copyWith(specificErrorMessage: '流媒体播放失败，请检查服务器配置和网络连接');
-        _attemptJellyfinRetry('未知错误');
+            _mediaInfo.copyWith(specificErrorMessage: 'Streaming playback failed, retrying...');
+        _attemptJellyfinRetry('Unknown error');
       }
     }
   }
@@ -1595,26 +1599,26 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
   /// 尝试Jellyfin流媒体重试
   void _attemptJellyfinRetry(String errorType) {
     if (_jellyfinRetryCount >= _maxJellyfinRetries) {
-      //debugPrint('MediaKitAdapter: Jellyfin流媒体重试次数已达上限 ($_maxJellyfinRetries)，停止重试');
+      debugPrint('MediaKitAdapter: Streaming retry limit reached ($_maxJellyfinRetries), stopping retries');
       return;
     }
 
     if (_lastJellyfinMediaPath != _currentMedia) {
-      // 新的媒体路径，重置重试计数
+      // New media path, reset retry count
       _jellyfinRetryCount = 0;
       _lastJellyfinMediaPath = _currentMedia;
     }
 
     _jellyfinRetryCount++;
     final retryDelay =
-        Duration(seconds: _jellyfinRetryCount * 2); // 递增延迟：2秒、4秒、6秒
+        Duration(seconds: _jellyfinRetryCount * 2); // Incremental delay: 2s, 4s, 6s
 
-    //debugPrint('MediaKitAdapter: 准备重试Jellyfin流媒体播放 (第$_jellyfinRetryCount次，延迟${retryDelay.inSeconds}秒)');
+    debugPrint('MediaKitAdapter: Preparing to retry streaming playback (attempt $_jellyfinRetryCount, delay ${retryDelay.inSeconds}s)');
 
     _jellyfinRetryTimer?.cancel();
     _jellyfinRetryTimer = Timer(retryDelay, () {
       if (!_isDisposed && _currentMedia == _lastJellyfinMediaPath) {
-        //debugPrint('MediaKitAdapter: 开始重试Jellyfin流媒体播放');
+        debugPrint('MediaKitAdapter: Starting streaming playback retry');
         _retryJellyfinPlayback();
       }
     });
@@ -1625,26 +1629,26 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
     if (_currentMedia.isEmpty) return;
 
     try {
-      //debugPrint('MediaKitAdapter: 重试播放Jellyfin流媒体: $_currentMedia');
+      debugPrint('MediaKitAdapter: Retrying streaming playback: $_currentMedia');
 
-      // 停止当前播放
+      // Stop current playback
       _player.stop();
 
-      // 等待一小段时间
+      // Wait a short time
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!_isDisposed) {
-          // 重新打开媒体
+          // Reopen media
           final mediaOptions = <String, dynamic>{};
           _properties.forEach((key, value) {
             mediaOptions[key] = value;
           });
 
           _player.open(Media(_currentMedia, extras: mediaOptions), play: false);
-          //debugPrint('MediaKitAdapter: Jellyfin流媒体重试完成');
+          debugPrint('MediaKitAdapter: Streaming retry completed');
         }
       });
     } catch (e) {
-      //debugPrint('MediaKitAdapter: Jellyfin流媒体重试失败: $e');
+      debugPrint('MediaKitAdapter: Streaming retry failed: $e');
     }
   }
 
@@ -1934,12 +1938,12 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
 
 // Helper map similar to SubtitleManager's languagePatterns
 const Map<String, String> _subtitleNormalizationPatterns = {
-  r'simplified|简体|chs|zh-hans|zh-cn|zh-sg|sc$|scjp': '简体中文',
-  r'traditional|繁体|cht|zh-hant|zh-tw|zh-hk|tc$|tcjp': '繁体中文',
-  r'chi|zho|chinese|中文': '中文', // General Chinese as a fallback
-  r'eng|en|英文|english': '英文',
-  r'jpn|ja|日文|japanese': '日语',
-  r'kor|ko|韩文|korean': '韩语',
+  r'simplified|简体|chs|zh-hans|zh-cn|zh-sg|sc$|scjp': 'Simplified Chinese',
+  r'traditional|繁体|cht|zh-hant|zh-tw|zh-hk|tc$|tcjp': 'Traditional Chinese',
+  r'chi|zho|chinese|中文': 'Chinese', // General Chinese as a fallback
+  r'eng|en|英文|english': 'English',
+  r'jpn|ja|日文|japanese': 'Japanese',
+  r'kor|ko|韩文|korean': 'Korean',
   // Add other languages as needed
 };
 
@@ -1950,7 +1954,7 @@ String _getNormalizedLanguageHelper(String input) {
   for (final entry in _subtitleNormalizationPatterns.entries) {
     final pattern = RegExp(entry.key, caseSensitive: false);
     if (pattern.hasMatch(lowerInput)) {
-      return entry.value; // Return "简体中文", "繁体中文", "中文", "英文", etc.
+      return entry.value; // Return "Simplified Chinese", "Traditional Chinese", "Chinese", "English", etc.
     }
   }
   return input; // Return original if no pattern matches
@@ -1969,19 +1973,19 @@ String _getNormalizedLanguageHelper(String input) {
     determinedLanguage = _getNormalizedLanguageHelper(originalLangCode);
   }
 
-  // Priority 2: If language from rawLang is generic ("中文") or unrecognized,
-  // try to get a more specific one (简体中文/繁体中文) from rawTitle.
+  // Priority 2: If language from rawLang is generic ("Chinese") or unrecognized,
+  // try to get a more specific one (Simplified Chinese/Traditional Chinese) from rawTitle.
   if (originalTitle.isNotEmpty) {
     String langFromTitle = _getNormalizedLanguageHelper(originalTitle);
-    if (langFromTitle == '简体中文' || langFromTitle == '繁体中文') {
-      if (determinedLanguage != '简体中文' && determinedLanguage != '繁体中文') {
+    if (langFromTitle == 'Simplified Chinese' || langFromTitle == 'Traditional Chinese') {
+      if (determinedLanguage != 'Simplified Chinese' && determinedLanguage != 'Traditional Chinese') {
         // Title provides a more specific Chinese variant than lang code did (or lang code was not Chinese)
         determinedLanguage = langFromTitle;
       }
     } else if (determinedLanguage.isEmpty ||
         determinedLanguage == originalLangCode) {
       // If lang code didn't yield a recognized language (or was empty),
-      // and title yields a recognized one (even if just "中文" or "英文"), use it.
+      // and title yields a recognized one (even if just "Chinese" or "English"), use it.
       if (langFromTitle != originalTitle &&
           _subtitleNormalizationPatterns.containsValue(langFromTitle)) {
         determinedLanguage = langFromTitle;
@@ -1989,17 +1993,17 @@ String _getNormalizedLanguageHelper(String input) {
     }
   }
 
-  // If still no recognized language, use originalLangCode or originalTitle if available, otherwise "未知"
+  // If still no recognized language, use originalLangCode or originalTitle if available, otherwise "Unknown"
   if (determinedLanguage.isEmpty ||
       (determinedLanguage == originalLangCode &&
           !_subtitleNormalizationPatterns.containsValue(determinedLanguage))) {
-    // 优先使用原始语言代码，如果没有则使用原始标题，最后才是"未知"
+    // Prefer original language code, if not available use original title, finally "Unknown"
     if (originalLangCode.isNotEmpty) {
       determinedLanguage = originalLangCode;
     } else if (originalTitle.isNotEmpty) {
       determinedLanguage = originalTitle;
     } else {
-      determinedLanguage = '未知';
+      determinedLanguage = 'Unknown';
     }
   }
 
@@ -2010,13 +2014,13 @@ String _getNormalizedLanguageHelper(String input) {
     String originalTitleAsLang = _getNormalizedLanguageHelper(originalTitle);
 
     // Case 1: The original title string itself IS a direct representation of the final determined language.
-    // Example: finalLanguage="简体中文", originalTitle="简体" or "Simplified Chinese".
+    // Example: finalLanguage="Simplified Chinese", originalTitle="Simplified" or "Simplified Chinese".
     // In this scenario, the title should just be the clean, finalLanguage.
     if (originalTitleAsLang == finalLanguage) {
       // Check if originalTitle is essentially just the language or has more info.
-      // If originalTitle is "简体中文 (Director's Cut)" -> originalTitleAsLang is "简体中文"
+      // If originalTitle is "Simplified Chinese (Director's Cut)" -> originalTitleAsLang is "Simplified Chinese"
       // originalTitle is NOT simple.
-      // If originalTitle is "简体" -> originalTitleAsLang is "简体中文"
+      // If originalTitle is "Simplified" -> originalTitleAsLang is "Simplified Chinese"
       // originalTitle IS simple.
       bool titleIsSimpleRepresentation = true;
       // A simple heuristic: if stripping common language keywords from originalTitle leaves little else,
@@ -2028,35 +2032,35 @@ String _getNormalizedLanguageHelper(String input) {
 
       if (originalTitle.length > finalLanguage.length + 3 &&
           originalTitle.contains(finalLanguage)) {
-        // e.g. originalTitle = "简体中文 (Forced)", finalLanguage = "简体中文"
+        // e.g. originalTitle = "Simplified Chinese (Forced)", finalLanguage = "Simplified Chinese"
         finalTitle = originalTitle;
       } else if (finalLanguage.contains(originalTitle) &&
           finalLanguage.length >= originalTitle.length) {
-        // e.g. originalTitle = "简体", finalLanguage = "简体中文" -> title should be "简体中文"
+        // e.g. originalTitle = "Simplified", finalLanguage = "Simplified Chinese" -> title should be "Simplified Chinese"
         finalTitle = finalLanguage;
       } else if (originalTitle == originalTitleAsLang) {
-        //e.g. originalTitle = "简体中文", finalLanguage = "简体中文"
+        //e.g. originalTitle = "Simplified Chinese", finalLanguage = "Simplified Chinese"
         finalTitle = finalLanguage;
       } else {
-        // originalTitle might be "Simplified" and finalLanguage "简体中文".
-        // Or, originalTitle is "Chinese (Commentary)" (originalTitleAsLang="中文") and finalLanguage="中文".
+        // originalTitle might be "Simplified" and finalLanguage "Simplified Chinese".
+        // Or, originalTitle is "Chinese (Commentary)" (originalTitleAsLang="Chinese") and finalLanguage="Chinese".
         // If originalTitle is more descriptive than just the language it normalizes to.
         finalTitle = originalTitle;
       }
     } else {
       // Case 2: The original title is NOT a direct representation of the final language.
-      // Example: finalLanguage="简体中文", originalTitle="Commentary track".
-      // Or finalLanguage="印尼语", originalTitle="Bahasa Indonesia". (Here originalTitleAsLang might be "印尼语")
+      // Example: finalLanguage="Simplified Chinese", originalTitle="Commentary track".
+      // Or finalLanguage="Indonesian", originalTitle="Bahasa Indonesia". (Here originalTitleAsLang might be "Indonesian")
       // We should combine them if originalTitle isn't already reflecting the language.
-      if (finalLanguage != '未知' &&
+      if (finalLanguage != 'Unknown' &&
           !originalTitle.toLowerCase().contains(finalLanguage
               .toLowerCase()
               .substring(0, finalLanguage.length > 2 ? 2 : 1))) {
-        // Avoids "简体中文 (简体中文 Commentary)" if originalTitle was "简体中文 Commentary"
+        // Avoids "Simplified Chinese (Simplified Chinese Commentary)" if originalTitle was "Simplified Chinese Commentary"
         // Check if originalTitle already contains the language (or part of it)
         bool titleAlreadyHasLang = false;
         for (var patValue in _subtitleNormalizationPatterns.values) {
-          if (patValue != "未知" && originalTitle.contains(patValue)) {
+          if (patValue != "Unknown" && originalTitle.contains(patValue)) {
             titleAlreadyHasLang = true;
             break;
           }
@@ -2077,11 +2081,11 @@ String _getNormalizedLanguageHelper(String input) {
 
   // Fallback if title somehow ended up empty or generic "n/a"
   if (finalTitle.isEmpty || finalTitle.toLowerCase() == 'n/a') {
-    finalTitle = (finalLanguage != '未知' && finalLanguage.isNotEmpty)
+    finalTitle = (finalLanguage != 'Unknown' && finalLanguage.isNotEmpty)
         ? finalLanguage
-        : "轨道 ${trackIndexForFallback + 1}";
+        : "Track ${trackIndexForFallback + 1}";
   }
-  if (finalTitle.isEmpty) finalTitle = "轨道 ${trackIndexForFallback + 1}";
+  if (finalTitle.isEmpty) finalTitle = "Track ${trackIndexForFallback + 1}";
 
   return (title: finalTitle, language: finalLanguage);
 }
