@@ -1,342 +1,374 @@
-<div style="display: flex; align-items: center; justify-content: center;">
-  <img src="https://github.com/user-attachments/assets/5366a99f-8906-4198-b2cf-2553252c0fb4" width="70%" style="margin-right: 20px;">
-  <img src="icons/new-icon-apple.png" width="30%">
-</div>
-<img src="assets/images/main_image.png" width="100%">
-
-# NipaPlay-Reload
+# PlayTorrio Video Player
 
 <div align="center">
-  <img src="https://count.getloli.com/get/@nipaplay?theme=moebooru" alt="访问统计" />
+
+![Platform support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square) ![License](https://img.shields.io/github/license/ayman708-UX/PlayTorrioPlayerV2?style=flat-square)
+
+**A powerful, cross-platform video player built with Flutter for PlayTorrio**
+
+Featuring advanced playback controls, IPC bridge for Electron integration, automatic subtitle management, and seamless streaming support.
+
 </div>
 
-![GitHub release](https://img.shields.io/github/v/release/mcdfsteve/nipaplay-reload?style=flat-square&color=blue) ![GitHub downloads](https://img.shields.io/github/downloads/mcdfsteve/nipaplay-reload/total?style=flat-square&color=green) ![Platform support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-lightgrey?style=flat-square) ![License](https://img.shields.io/github/license/mcdfsteve/nipaplay-reload?style=flat-square)
+---
 
-<div align="center" style="margin: 10px 0;">
-  <img src="https://api.star-history.com/svg?repos=mcdfsteve/nipaplay-reload&type=Date&theme=moebooru" alt="Star History Chart">
-</div>
+## 🎯 Overview
 
-### 一个现代化的视频播放器应用。支持 Windows、macOS、Linux、Android 和 iOS 五大操作系统，为用户提供跨平台的统一体验。支持自动匹配网络弹幕。支持观看进度同步bangumi，对动画进行打分和写评论。支持查看新番更新。支持链接emby，jellyfin。支持挂载webdav。支持把你的电脑搭建成本地媒体中心，局域网内其他设备可以快速访问并播放。
+PlayTorrio Video Player is a high-performance video player built specifically for the PlayTorrio ecosystem. It provides a native-like experience across Windows, macOS, and Linux platforms with advanced features like:
 
-## 下载
+- **IPC Bridge**: Full Electron/Node.js integration via stdin/stdout communication
+- **Streaming Support**: Automatic retry logic for reliable HTTP/HTTPS streaming
+- **Subtitle Management**: Multiple external subtitle support with automatic language detection
+- **Modern UI**: Clean, responsive interface with playback controls
+- **Cross-Platform**: Single codebase for Windows, macOS, and Linux
 
-- **Windows（x86 64）/Linux（amd64）/macOS（Intel&Apple Silicon）/Android（arm32&arm64&x86 64）**
-  
-  - [GitHub Releases](https://github.com/mcdfsteve/nipaplay-reload/releases)
-- **iOS (App Store)**
-  
-  - <a href="https://apps.apple.com/cn/app/nipaplay/id6751284970" target="_blank">
-    <img src="others/download.png" width="30%" alt="下载">
+## ✨ Key Features
 
-</a>
+### 🎬 Video Playback
+- **Multiple Player Engines**: Support for Media Kit (libmpv), FVP (libmdk), and Video Player
+- **Format Support**: Wide range of video formats (MP4, MKV, AVI, WebM, etc.)
+- **Hardware Acceleration**: GPU-accelerated decoding for smooth playback
+- **Streaming**: HTTP/HTTPS streaming with automatic retry on connection errors
+- **Playback Controls**: Play, pause, seek, volume, playback speed
+- **Screenshot Capture**: Take screenshots during playback
 
-- **macOS (Homebrew)**
-  
-  > 我们推荐 macOS 用户使用 [Homebrew](https://brew.sh/) 进行安装和管理。
-  
-  1. **添加我们的软件源 (Tap):**
-     *(此命令每个用户只需运行一次)*
-     
-     ```bash
-     brew tap Shinokawa/nipaplay-reload
-     ```
-  2. **安装 NipaPlay:**
-     
-     ```bash
-     brew install --cask nipaplay-reload
-     ```
-  3. **更新 NipaPlay:**
-     
-     ```bash
-     brew upgrade nipaplay-reload
-     ```
-- **Arch Linux（x86 64）**
-  
-  - 使用 `aur`助手
-    
-    ```bash
-    paru -S nipaplay-reload-bin
-    ```
-    
-    > 或
-    
-    ```bash
-    yay -S nipaplay-reload-bin
-    ```
+### 📝 Subtitle Support
+- **Multiple Formats**: ASS, SRT subtitle support
+- **External Subtitles**: Add unlimited external subtitle files
+- **Built-in Subtitles**: Automatic detection of embedded subtitle tracks
+- **Language Detection**: Smart language identification (English, Chinese, Japanese, Korean, etc.)
+- **Subtitle Comments**: Add source/quality notes to subtitle tracks
+- **Track Switching**: Easy switching between subtitle tracks
 
-- **Gentoo Linux(x86 64)**
+### 🔌 IPC Bridge Integration
+- **Electron Compatible**: Full integration with Electron apps via IPC
+- **JSON Protocol**: Simple JSON-based command/response system
+- **Real-time Events**: State change notifications for UI synchronization
+- **Command Line Args**: Launch with pre-configured settings
+- **Process Control**: Clean startup and shutdown handling
 
-  ```bash
-  ebuild gentoo/media-video/nipaplay-bin/nipaplay-bin-1.8.11.ebuild merge
-  ```
-  
-## 使用文档
+### 🎨 User Interface
+- **Modern Design**: Clean, intuitive interface
+- **Responsive Layout**: Adapts to different window sizes
+- **Fullscreen Mode**: Distraction-free viewing experience
+- **Playback Info**: Detailed technical information display
+- **Error Handling**: User-friendly error messages in English
 
-**[➡️ 点击这里，查看完整的使用文档](Documentation/index.md)**
+## 🚀 Quick Start
 
-在这份文档中，你将了解到：
+### For End Users
 
-* 如何在各个平台上安装和配置 NipaPlay
-* 连接 Emby/Jellyfin 媒体服务器的详细步骤
-* 播放器设置优化和故障排查指南
-* 常见问题解答和使用技巧
+Download the latest release for your platform:
+- **Windows**: `PlayTorrio-Windows-x64.zip`
+- **macOS**: `PlayTorrio-macOS.dmg`
+- **Linux**: `PlayTorrio-Linux-x64.tar.gz`
 
-## 如何贡献
+Extract and run the executable:
+```bash
+# Windows
+PlayTorrio.exe
 
-我们非常欢迎来自社区的各种形式的贡献，无论是代码、文档、设计还是软件分发。为了帮助你更轻松地参与进来，我们为您准备了一套详尽的贡献者指南。
+# macOS
+open PlayTorrio.app
 
-**[➡️ 点击这里，查看完整的贡献者指南](CONTRIBUTING_GUIDE/00-Introduction.md)**
+# Linux
+./PlayTorrio
+```
 
-在这份指南中，你将了解到：
+### For Developers (Electron Integration)
 
-* 即使不会编程，也能为项目做出贡献的方法。
-* 如何搭建开发环境，并借助 AI 工具编写代码。
-* 如何为应用开发新的主题、添加新的播放器或弹幕内核。
+1. **Install the player** in your Electron project:
+```bash
+# Copy the player executable to your project
+cp /path/to/PlayTorrio.exe ./resources/player/
+```
 
-## 赞助项目运行
+2. **Use the IPC bridge**:
+```javascript
+const { spawn } = require('child_process');
 
-<a href="https://afdian.com/a/irigas" target="_blank">
-<img src="others/爱发电.jpg" width="30%" alt="爱发电">
+// Launch player with IPC enabled
+const player = spawn('./resources/player/PlayTorrio.exe', [
+  '--ipc',
+  '--width', '1920',
+  '--height', '1080'
+]);
 
-</a>
+// Send commands via stdin
+player.stdin.write(JSON.stringify({
+  type: 'load_video',
+  id: 'cmd_1',
+  data: {
+    url: 'https://example.com/video.mp4'
+  }
+}) + '\n');
 
-<img src="others/赞赏码.jpg" width="30%" alt="赞赏码">
+// Receive responses via stdout
+player.stdout.on('data', (data) => {
+  const messages = data.toString().split('\n').filter(line => line.trim());
+  messages.forEach(line => {
+    try {
+      const message = JSON.parse(line);
+      console.log('Player message:', message);
+    } catch (e) {
+      // Ignore non-JSON output
+    }
+  });
+});
+```
 
-## 应用截图
+See [IPC Integration Guide](IPC_INTEGRATION.md) for complete documentation.
+
+## 📖 Documentation
+
+### Core Documentation
+- **[IPC Integration Guide](IPC_INTEGRATION.md)** - Complete guide for Electron integration
+- **[Bridge Documentation](bridge.md)** - Detailed IPC protocol specification
+- **[Build Guide](BUILD_GUIDE.md)** - Instructions for building from source
+- **[Release Guide](RELEASE_GUIDE.md)** - Release process and versioning
+
+### Example Code
+- **[Electron Integration Example](electron_integration_example.js)** - Ready-to-use JavaScript bridge class
+- **[IPC Test Scripts](test_ipc.js)** - Test scripts for IPC functionality
+- **[Subtitle Test](test_multiple_subtitles.js)** - Multiple subtitle handling examples
+
+## 🔧 IPC Commands
+
+### Video Control
+```javascript
+// Load video
+{ type: 'load_video', data: { url: 'https://...', startTime: 0 } }
+
+// Playback control
+{ type: 'play' }
+{ type: 'pause' }
+{ type: 'seek', data: { position: 30000 } }
+
+// Volume control
+{ type: 'set_volume', data: { volume: 0.5 } }
+```
+
+### Subtitle Management
+```javascript
+// Add external subtitle
+{
+  type: 'add_external_subtitle',
+  data: {
+    name: 'English',
+    url: 'https://example.com/subtitle.srt',
+    comment: 'OpenSubtitles - High Quality'
+  }
+}
+
+// Select subtitle track
+{ type: 'select_subtitle', data: { index: 0 } }
+```
+
+### Window Control
+```javascript
+// Set window size
+{ type: 'set_window_size', data: { width: 1920, height: 1080 } }
+
+// Toggle fullscreen
+{ type: 'toggle_fullscreen' }
+
+// Get current state
+{ type: 'get_state' }
+```
+
+### Events
+```javascript
+// Ready event
+{ type: 'event', event: 'ready', data: { version: '1.8.45' } }
+
+// State changed event
+{
+  type: 'event',
+  event: 'state_changed',
+  data: {
+    hasVideo: true,
+    isPlaying: true,
+    position: 15000,
+    duration: 120000,
+    volume: 1.0,
+    isFullscreen: false
+  }
+}
+```
+
+## 🛠️ Building from Source
+
+### Prerequisites
+- Flutter SDK 3.5.3 or higher
+- Platform-specific build tools:
+  - **Windows**: Visual Studio 2022 with C++ tools
+  - **macOS**: Xcode 14+
+  - **Linux**: GCC, CMake, GTK3 development libraries
+
+### Build Commands
+
+```bash
+# Clone the repository
+git clone https://github.com/ayman708-UX/PlayTorrioPlayerV2.git
+cd PlayTorrioPlayerV2
+
+# Install dependencies
+flutter pub get
+
+# Build for your platform
+flutter build windows --release  # Windows
+flutter build macos --release    # macOS
+flutter build linux --release    # Linux
+```
+
+Output locations:
+- **Windows**: `build/windows/x64/runner/Release/`
+- **macOS**: `build/macos/Build/Products/Release/`
+- **Linux**: `build/linux/x64/release/bundle/`
+
+## 🎯 Use Cases
+
+### 1. Electron App Integration
+Perfect for Electron applications that need a powerful video player:
+- Torrent streaming clients
+- Media center applications
+- Video editing tools
+- Educational platforms
+
+### 2. Standalone Player
+Use as a standalone video player with:
+- Drag-and-drop video loading
+- URL input for streaming
+- Subtitle management
+- Playback controls
+
+### 3. Embedded Player
+Embed in larger applications via IPC:
+- Control from parent process
+- Receive real-time state updates
+- Manage subtitles programmatically
+- Customize window appearance
+
+## 🔒 Security Features
+
+- **Input Validation**: All URLs and parameters are validated
+- **HTTPS Support**: Secure streaming over HTTPS
+- **Sandboxed Execution**: Runs in isolated process when launched via IPC
+- **Error Handling**: Graceful error recovery without crashes
+- **Resource Limits**: Automatic cleanup of resources
+
+## 🚀 Performance
+
+- **Hardware Acceleration**: GPU-accelerated video decoding
+- **Efficient Streaming**: Automatic retry with exponential backoff
+- **Memory Management**: Optimized memory usage for long playback sessions
+- **Low Latency**: Minimal delay between commands and execution
+- **Smooth Playback**: 60 FPS rendering with vsync
+
+## 🌐 Streaming Support
+
+### Automatic Retry Logic
+The player automatically retries failed streaming connections:
+- **3 retry attempts** with incremental delays (2s, 4s, 6s)
+- **Handles initialization errors** (pos: 0, dur: 0)
+- **Works with all HTTP/HTTPS URLs** including localhost
+- **No error dialogs** during retry attempts
+
+### Supported Protocols
+- HTTP/HTTPS streaming
+- Local file playback
+- Network share access (SMB, WebDAV)
+- Jellyfin/Emby integration
+
+## 📊 Technical Stack
+
+### Core Framework
+- **Flutter 3.5.3**: Cross-platform UI framework
+- **Dart**: Programming language
+
+### Video Engines
+- **Media Kit**: libmpv-based player (primary)
+- **FVP**: libmdk-based player (alternative)
+- **Video Player**: Flutter's official player (fallback)
+
+### Key Dependencies
+- `media_kit`: Media playback framework
+- `media_kit_video`: Video rendering
+- `window_manager`: Window control
+- `provider`: State management
+- `shared_preferences`: Settings storage
+- `path_provider`: File system access
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+
+### Development Setup
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+### Code Style
+- Follow Dart style guidelines
+- Add comments for complex logic
+- Write descriptive commit messages
+- Update documentation as needed
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## � A*cknowledgments
+
+Built on top of NipaPlay-Reload by MCDFSteve, customized for PlayTorrio with:
+- IPC bridge implementation
+- Streaming retry logic
+- English UI translation
+- Enhanced subtitle management
+- Electron integration support
+
+### Third-Party Libraries
+- [media_kit](https://pub.dev/packages/media_kit) - Media playback
+- [window_manager](https://pub.dev/packages/window_manager) - Window control
+- [provider](https://pub.dev/packages/provider) - State management
+- And many more (see [pubspec.yaml](pubspec.yaml))
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/ayman708-UX/PlayTorrioPlayerV2/issues)
+- **Documentation**: See `/Documentation` folder
+- **Examples**: See example files in repository root
+
+## 🗺️ Roadmap
+
+- [ ] WebSocket-based IPC for better performance
+- [ ] Picture-in-Picture mode
+- [ ] Advanced subtitle styling
+- [ ] Playlist support
+- [ ] Audio-only mode
+- [ ] Video effects and filters
+- [ ] Chromecast support
+- [ ] Remote control API
+
+## 📈 Version History
+
+### v1.8.45 (Latest)
+- Full English UI translation
+- Automatic streaming retry logic
+- Enhanced subtitle track naming
+- Improved error handling
+- IPC bridge stability improvements
+
+See [CHANGES_SUMMARY.md](CHANGES_SUMMARY.md) for complete version history.
+
+---
 
 <div align="center">
-  <p><strong>主界面</strong></p>
-  <img src="others/%E4%B8%BB%E9%A1%B5.png" width="70%" alt="主界面">
-  <img src="others/%E4%B8%BB%E9%A1%B5-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="主界面-手机">
 
-<p><strong>视频播放页面</strong></p>
-  <img src="others/%E4%B8%BB%E7%95%8C%E9%9D%A2.png" width="70%" alt="视频播放页面">
-  <img src="others/%E4%B8%BB%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="视频播放页面-手机">
+**Built with ❤️ for PlayTorrio**
 
-<p><strong>新番更新界面</strong></p>
-  <img src="others/%E6%96%B0%E7%95%AA%E6%9B%B4%E6%96%B0%E7%95%8C%E9%9D%A2.png" width="70%" alt="新番更新界面">
-  <img src="others/%E6%96%B0%E7%95%AA%E6%9B%B4%E6%96%B0%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="新番更新界面-手机">
+[Report Bug](https://github.com/ayman708-UX/PlayTorrioPlayerV2/issues) · [Request Feature](https://github.com/ayman708-UX/PlayTorrioPlayerV2/issues) · [Documentation](IPC_INTEGRATION.md)
 
-<p><strong>新番详情界面</strong></p>
-  <img src="others/%E6%96%B0%E7%95%AA%E8%AF%A6%E6%83%85%E7%95%8C%E9%9D%A2.png" width="70%" alt="新番详情界面">
-  <img src="others/%E6%96%B0%E7%95%AA%E8%AF%A6%E6%83%85%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="新番详情界面-手机">
-
-<p><strong>流媒体详情页面</strong></p>
-  <img src="others/%E6%B5%81%E5%AA%92%E4%BD%93%E8%AF%A6%E6%83%85%E9%A1%B5%E9%9D%A2.png" width="70%" alt="流媒体详情页面">
-  <img src="others/%E6%B5%81%E5%AA%92%E4%BD%93%E8%AF%A6%E6%83%85%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="流媒体详情页面-手机">
-
-<p><strong>流媒体媒体库</strong></p>
-  <img src="others/%E6%B5%81%E5%AA%92%E4%BD%93%E5%AA%92%E4%BD%93%E5%BA%93.png" width="70%" alt="流媒体媒体库">
-  <img src="others/%E6%B5%81%E5%AA%92%E4%BD%93%E5%AA%92%E4%BD%93%E5%BA%93-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="流媒体媒体库-手机">
-
-<p><strong>播放界面</strong></p>
-  <img src="others/%E6%92%AD%E6%94%BE%E7%95%8C%E9%9D%A2.png" width="70%" alt="播放界面">
-  <img src="others/%E6%92%AD%E6%94%BE%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="70%" alt="播放界面-手机">
-
-<p><strong>播放界面UI展示</strong></p>
-  <img src="others/%E6%92%AD%E6%94%BE%E7%95%8C%E9%9D%A2-UI%E5%B1%95%E7%A4%BA.png" width="70%" alt="播放界面UI展示">
-  <img src="others/%E6%92%AD%E6%94%BE%E7%95%8C%E9%9D%A2-UI%E5%B1%95%E7%A4%BA-%E6%89%8B%E6%9C%BA.png" width="70%" alt="播放界面UI展示-手机">
-
-<p><strong>媒体库界面</strong></p>
-  <img src="others/%E5%AA%92%E4%BD%93%E5%BA%93%E7%95%8C%E9%9D%A2.png" width="70%" alt="媒体库界面">
-  <img src="others/%E5%AA%92%E4%BD%93%E5%BA%93%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="媒体库界面-手机">
-
-<p><strong>剧集列表界面</strong></p>
-  <img src="others/%E5%89%A7%E9%9B%86%E5%88%97%E8%A1%A8%E7%95%8C%E9%9D%A2.png" width="70%" alt="剧集列表界面">
-  <img src="others/%E5%89%A7%E9%9B%86%E5%88%97%E8%A1%A8%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="剧集列表界面-手机">
-
-<p><strong>库管理界面</strong></p>
-  <img src="others/%E5%BA%93%E7%AE%A1%E7%90%86%E7%95%8C%E9%9D%A2.png" width="70%" alt="库管理界面">
-  <img src="others/%E5%BA%93%E7%AE%A1%E7%90%86%E7%95%8C%E9%9D%A2-%E6%89%8B%E6%9C%BA.png" width="18.6%" alt="库管理界面-手机">
 </div>
-
-## 已实现功能
-
-- **视频播放**
-  
-  - 支持本地视频文件播放
-  - 支持Emby，Jellyfin视频播放
-  - 支持切换播放器内核
-  - 支持弹幕显示（集成弹弹play）
-    - 滚动弹幕、顶部弹幕、底部弹幕
-    - 弹幕记忆运动轨迹
-    - 时间轴跳转时弹幕位置同步
-    - 弹幕轨道管理系统
-    - 合并弹幕显示
-    - 开关弹幕覆盖
-    - 本地弹幕挂载（json/xml）
-  - 字幕支持
-    - 支持 ASS、SRT 格式字幕
-    - 支持内嵌字幕和外挂字幕
-    - 支持多字幕轨道切换
-    - 支持字幕样式自定义
-    - 支持挂载本地字幕（ass/srt）
-    - 支持字幕注释/描述（标注字幕来源）
-  - 音频支持
-    - 支持多音频轨道切换
-  - 视频信息自动匹配
-  - 播放进度记忆
-  - 倍速功能
-  - 视频截图
-  - Anime4K 超分辨率（实验性）
-  - CRT 显示效果（多档位 GLSL 着色器）
-- **番剧管理**
-  
-  - Bangumi同步观看记录与评分，评论
-  - 新番时间表展示
-  - 按星期分类显示
-  - 番剧详情查看
-  - 图片缓存管理
-  - SMB 媒体库挂载
-  - 历史记录同步
-  - 多设备远程访问
-  - 备份与恢复
-- **设置中心**
-  
-  - 毛玻璃设计风格，提供现代感界面
-  - 适配平板布局和安卓TV
-  - 完整的主题系统
-  - 主题模式切换（亮色/暗色）
-  - 背景图片自定义更换
-  - 快捷键自定义
-  - 多种视频内核和弹幕内核随意切换
-  - 账户设置
-  - 关于页面
-
-## 开发进度
-
-> 持续开发中，欢迎关注 Releases 获取最新版本
-
-## 关于提交issue
-
-- 可以在软件的开发者选项-终端输出 里复制或导出软件日志
-- 平板/安卓TV用户也支持，因为可以导出为二维码
-
-## 待加入功能
-
-- **功能扩展**
-  - 评论区功能
-  - 云媒体库挂载（FTP）
-  - 视频导出单独片段为gif
-  - 内置下载器并可通过app远程控制
-  - 新番详情页面支持直接跳转网络媒体库
-  - 在线url播放
-  - webview实现弹幕刮削
-  - 补帧功能
-  - hdr和杜比视界支持
-  - 对鸿蒙OS VisionPro AppleTV的移植
-
-## 使用的第三方库
-
-- **核心功能库**
-  
-  - [fvp](https://pub.dev/packages/fvp) - 高性能视频播放器
-  - [video_player](https://pub.dev/packages/video_player) - Flutter官方视频播放器
-  - [media_kit](https://pub.dev/packages/media_kit) - 跨平台媒体播放框架
-  - [media_kit_video](https://pub.dev/packages/media_kit_video) - media_kit视频组件
-  - [media_kit_libs_video](https://pub.dev/packages/media_kit_libs_video) - media_kit视频库
-  - [http](https://pub.dev/packages/http) - HTTP 请求处理
-  - [crypto](https://pub.dev/packages/crypto) - 加密功能
-  - [canvas_danmaku](https://pub.dev/packages/canvas_danmaku) - Canvas弹幕
-- **UI 相关**
-  
-  - [glassmorphism](https://pub.dev/packages/glassmorphism) - 毛玻璃效果
-  - [hugeicons](https://pub.dev/packages/hugeicons) - 图标库
-  - [kmbal_ionicons](https://pub.dev/packages/kmbal_ionicons) - 图标库
-  - [transparent_image](https://pub.dev/packages/transparent_image) - 透明图片占位符
-- **文件处理**
-  
-  - [file_selector](https://pub.dev/packages/file_selector) - 文件选择器
-  - [path_provider](https://pub.dev/packages/path_provider) - 路径提供
-  - [path](https://pub.dev/packages/path) - 路径处理
-  - [image_picker](https://pub.dev/packages/image_picker) - 图片选择器
-  - [image](https://pub.dev/packages/image) - 图片处理
-- **状态管理**
-  
-  - [provider](https://pub.dev/packages/provider) - 状态管理
-  - [synchronized](https://pub.dev/packages/synchronized) - 同步控制
-- **数据存储**
-  
-  - [shared_preferences](https://pub.dev/packages/shared_preferences) - 本地存储
-  - [sqflite](https://pub.dev/packages/sqflite) - SQLite数据库
-  - [sqflite_common_ffi](https://pub.dev/packages/sqflite_common_ffi) - 桌面平台SQLite支持
-- **网络相关**
-  
-  - [cached_network_image](https://pub.dev/packages/cached_network_image) - 网络图片缓存
-- **系统功能**
-  
-  - [window_manager](https://pub.dev/packages/window_manager) - 窗口管理
-  - [package_info_plus](https://pub.dev/packages/package_info_plus) - 包信息
-  - [url_launcher](https://pub.dev/packages/url_launcher) - URL 启动器
-  - [permission_handler](https://pub.dev/packages/permission_handler) - 权限管理
-  - [wakelock_plus](https://pub.dev/packages/wakelock_plus) - 屏幕常亮
-  - [screen_brightness](https://pub.dev/packages/screen_brightness) - 屏幕亮度控制
-- **工具库**
-  
-  - [intl](https://pub.dev/packages/intl) - 国际化支持
-  - [uuid](https://pub.dev/packages/uuid) - UUID生成器
-- **开发工具**
-  
-  - [flutter_lints](https://pub.dev/packages/flutter_lints) - 代码检查
-
-## 技术栈
-
-### 🎯 **核心框架**
-
-- **Flutter** - 跨平台UI框架
-- **Dart** - 编程语言
-
-### 🎬 **视频播放引擎**
-
-- **FVP (Flutter Video Player)** - 基于libmdk的高性能视频播放器
-- **Media Kit** - 跨平台媒体播放框架
-- **Video Player** - Flutter官方视频播放器
-- **libmpv** - 底层媒体播放库
-
-### 🗄️ **数据存储**
-
-- **SQLite** - 本地数据库存储
-- **SharedPreferences** - 轻量级键值存储
-- **文件系统** - 本地文件管理
-
-### 🌐 **网络与API**
-
-- **HTTP** - 网络请求处理
-- **弹弹play API** - 弹幕数据源
-- **Bangumi API** - 番剧信息源
-- **Emby/Jellyfin API** - 媒体服务器集成
-
-### 🎨 **UI/UX技术**
-
-- **Material Design** - 设计语言
-- **Glassmorphism** - 毛玻璃视觉效果
-- **Provider** - 状态管理
-- **自适应布局** - 响应式设计
-
-### 🔧 **系统集成**
-
-- **Window Manager** - 桌面窗口管理
-- **Permission Handler** - 权限管理
-- **Wakelock** - 屏幕常亮控制
-- **Screen Brightness** - 亮度控制
-
-### 📱 **平台支持**
-
-- **Windows** - 桌面应用
-- **macOS** - 桌面应用
-- **Linux** - 桌面应用
-- **Android** - 移动应用
-- **iOS** - 移动应用
-
-## 关于看板娘
-
-- https://www.pixiv.net/artworks/130349456 （作者MCDFsteve）
-
-## 鸣谢
-
-- EmoSakura
-- Mr.果仁
-- 姬田诗乃
-- 微光
-- 大祥老师
-- 卡拜
