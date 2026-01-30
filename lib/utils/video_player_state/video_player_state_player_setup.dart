@@ -251,9 +251,13 @@ extension VideoPlayerStatePlayerSetup on VideoPlayerState {
           player.mediaInfo.video!.isNotEmpty) {
         final videoTrack = player.mediaInfo.video![0];
         if (videoTrack.codec.width > 0 && videoTrack.codec.height > 0) {
-          _aspectRatio = videoTrack.codec.width / videoTrack.codec.height;
+          final calculatedRatio = videoTrack.codec.width / videoTrack.codec.height;
+          _originalAspectRatio = calculatedRatio;
+          if (_aspectRatioMode == 'auto') {
+            _aspectRatio = calculatedRatio;
+          }
           debugPrint(
-              'VideoPlayerState: 从mediaInfo设置视频宽高比: $_aspectRatio (${videoTrack.codec.width}x${videoTrack.codec.height})');
+              'VideoPlayerState: Set video aspect ratio from mediaInfo: $_aspectRatio (${videoTrack.codec.width}x${videoTrack.codec.height})');
         } else {
           // 备用方案：从播放器状态获取视频尺寸
           debugPrint('VideoPlayerState: mediaInfo中视频尺寸为0，尝试从播放器状态获取');
@@ -263,10 +267,14 @@ extension VideoPlayerStatePlayerSetup on VideoPlayerState {
             try {
               player.snapshot().then((frame) {
                 if (frame != null && frame.width > 0 && frame.height > 0) {
-                  _aspectRatio = frame.width / frame.height;
+                  final calculatedRatio = frame.width / frame.height;
+                  _originalAspectRatio = calculatedRatio;
+                  if (_aspectRatioMode == 'auto') {
+                    _aspectRatio = calculatedRatio;
+                  }
                   debugPrint(
-                      'VideoPlayerState: 从snapshot设置视频宽高比: $_aspectRatio (${frame.width}x${frame.height})');
-                  notifyListeners(); // 通知UI更新
+                      'VideoPlayerState: Set video aspect ratio from snapshot: $_aspectRatio (${frame.width}x${frame.height})');
+                  notifyListeners(); // Notify UI to update
                 }
               });
             } catch (e) {
@@ -412,21 +420,36 @@ extension VideoPlayerStatePlayerSetup on VideoPlayerState {
         await _initializeWatchHistory(videoPath);
       }
 
-      // 获取上次播放位置
+      // Get last playback position
       final lastPosition = await _getVideoPosition(videoPath);
       debugPrint(
           'VideoPlayerState: lastPosition for $videoPath = $lastPosition (raw value from _getVideoPosition)');
 
-      // 如果有上次的播放位置，恢复播放位置
+      // Wait for duration to be loaded before seeking
       if (lastPosition > 0) {
-        //debugPrint('8. 恢复上次播放位置...');
-        // 先设置播放位置
-        player.seek(position: lastPosition);
-        // 等待一小段时间确保位置设置完成
-        await Future.delayed(const Duration(milliseconds: 100));
-        // 更新状态
-        _position = Duration(milliseconds: lastPosition);
-        _progress = lastPosition / _duration.inMilliseconds;
+        // Wait for duration to be available
+        int durationWaitCount = 0;
+        const int maxDurationWait = 50; // Max 5 seconds
+        while (_duration.inMilliseconds <= 0 && durationWaitCount < maxDurationWait) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          _duration = Duration(milliseconds: player.mediaInfo.duration);
+          durationWaitCount++;
+        }
+        
+        if (_duration.inMilliseconds > 0) {
+          debugPrint('VideoPlayerState: Duration loaded (${_duration.inMilliseconds}ms), now seeking to last position');
+          // Set playback position
+          player.seek(position: lastPosition);
+          // Wait a bit to ensure position is set
+          await Future.delayed(const Duration(milliseconds: 100));
+          // Update state
+          _position = Duration(milliseconds: lastPosition);
+          _progress = lastPosition / _duration.inMilliseconds;
+        } else {
+          debugPrint('VideoPlayerState: Duration not loaded after waiting, skipping seek');
+          _position = Duration.zero;
+          _progress = 0.0;
+        }
       } else {
         _position = Duration.zero;
         _progress = 0.0;

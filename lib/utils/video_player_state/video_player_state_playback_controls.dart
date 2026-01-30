@@ -958,3 +958,56 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
     }
   }
 }
+
+  // Cycle through aspect ratio modes
+  void cycleAspectRatio() {
+    final modes = ['auto', '16:9', '4:3', '21:9', '1:1', 'fill'];
+    final currentIndex = modes.indexOf(_aspectRatioMode);
+    final nextIndex = (currentIndex + 1) % modes.length;
+    _aspectRatioMode = modes[nextIndex];
+    
+    // Apply the aspect ratio
+    switch (_aspectRatioMode) {
+      case 'auto':
+        _aspectRatio = _originalAspectRatio ?? (16 / 9);
+        break;
+      case '16:9':
+        _aspectRatio = 16 / 9;
+        break;
+      case '4:3':
+        _aspectRatio = 4 / 3;
+        break;
+      case '21:9':
+        _aspectRatio = 21 / 9;
+        break;
+      case '1:1':
+        _aspectRatio = 1.0;
+        break;
+      case 'fill':
+        _aspectRatio = 16 / 9; // Will be handled by BoxFit in UI
+        break;
+    }
+    
+    debugPrint('Aspect ratio mode changed to: $_aspectRatioMode (ratio: $_aspectRatio)');
+    notifyListeners();
+  }
+  
+  // Get display name for current aspect ratio mode
+  String getAspectRatioDisplayName() {
+    switch (_aspectRatioMode) {
+      case 'auto':
+        return 'Auto';
+      case '16:9':
+        return '16:9';
+      case '4:3':
+        return '4:3';
+      case '21:9':
+        return '21:9';
+      case '1:1':
+        return '1:1';
+      case 'fill':
+        return 'Fill';
+      default:
+        return 'Auto';
+    }
+  }

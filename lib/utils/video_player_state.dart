@@ -197,7 +197,9 @@ class VideoPlayerState extends ChangeNotifier implements WindowListener {
   Duration _position = Duration.zero;
   String? _error;
   final bool _isErrorStopping = false; // <<< ADDED THIS FIELD
-  double _aspectRatio = 16 / 9; // 默认16:9，但会根据视频实际比例更新
+  double _aspectRatio = 16 / 9; // Default 16:9, but will be updated based on actual video ratio
+  double? _originalAspectRatio; // Store original video aspect ratio
+  String _aspectRatioMode = 'auto'; // 'auto', '16:9', '4:3', '21:9', 'fill', 'fit'
   String? _currentVideoPath;
   String? _currentActualPlayUrl; // 存储实际播放URL，用于判断转码状态
   String _danmakuOverlayKey = 'idle'; // 弹幕覆盖层的稳定key
@@ -596,6 +598,7 @@ class VideoPlayerState extends ChangeNotifier implements WindowListener {
   Duration get position => _position;
   String? get error => _error;
   double get aspectRatio => _aspectRatio;
+  String get aspectRatioMode => _aspectRatioMode;
   bool get hasVideo =>
       _status == PlayerStatus.ready ||
       _status == PlayerStatus.playing ||

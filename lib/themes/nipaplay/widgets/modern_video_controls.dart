@@ -362,6 +362,33 @@ class _ModernVideoControlsState extends State<ModernVideoControls> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.aspect_ratio, color: Colors.white, size: 38),
+                  onPressed: videoState.hasVideo
+                      ? () {
+                          videoState.cycleAspectRatio();
+                          // Show a brief toast/snackbar with the current mode
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Aspect Ratio: ${videoState.getAspectRatioDisplayName()}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: const Color(0xFF9d4edd),
+                              duration: const Duration(milliseconds: 800),
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.only(bottom: 100, left: 20, right: 20),
+                            ),
+                          );
+                        }
+                      : null,
+                  tooltip: 'Aspect Ratio',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    overlayColor: Colors.white.withOpacity(0.1),
+                    splashFactory: NoSplash.splashFactory,
+                  ),
+                ),
+                IconButton(
                   icon: const Icon(Icons.audiotrack, color: Colors.white, size: 38),
                   onPressed: videoState.hasVideo
                       ? () => _showAudioMenu(context, videoState)
