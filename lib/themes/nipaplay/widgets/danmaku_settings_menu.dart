@@ -622,7 +622,7 @@ class _DanmakuSettingsMenuState extends State<DanmakuSettingsMenu> {
                         ),
                       ],
                     ),
-                    const SettingsHintText('在视频特定进度(25%/50%/75%/90%)显示弹幕提示'),
+                    const SettingsHintText('Display danmaku notifications at specific video progress points (25%/50%/75%/90%)'),
                   ],
                 ),
               ),

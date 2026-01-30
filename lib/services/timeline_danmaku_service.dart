@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class TimelineDanmakuService {
-  /// 生成时间轴告知弹幕轨道
+  /// Generate timeline notification danmaku track
   /// 
-  /// [videoDuration] 视频总时长
+  /// [videoDuration] Total video duration
   static Map<String, dynamic> generateTimelineDanmaku(Duration videoDuration) {
     final totalSeconds = videoDuration.inSeconds;
     final List<Map<String, dynamic>> comments = [];
@@ -13,27 +13,27 @@ class TimelineDanmakuService {
 
     for (int i = 0; i < percentages.length; i++) {
       final time = totalSeconds * percentages[i];
-      final content = '视频播放进度：${labels[i]}';
+      final content = 'Video progress: ${labels[i]}';
       
       comments.add({
-        'time': time,                 // 时间 (double)
-        'type': 'scroll',             // 类型 (string)
-        'content': content,           // 内容 (string)
-        'color': 'rgb(255,255,255)',  // 颜色 (string)
-        // 添加其他兼容性字段
+        'time': time,                 // time (double)
+        'type': 'scroll',             // type (string)
+        'content': content,           // content (string)
+        'color': 'rgb(255,255,255)',  // color (string)
+        // Add other compatibility fields
         't': time,
         'c': content,
         'y': 'scroll',
         'r': 'rgb(255,255,255)',
         'p': '', 
         'd': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        'size': 25, // 默认字号
-        'weight': 1, // 默认权重
+        'size': 25, // default font size
+        'weight': 1, // default weight
       });
     }
 
     return {
-      'name': '时间轴告知',
+      'name': 'Timeline Notification',
       'source': 'timeline',
       'count': comments.length,
       'comments': comments,
