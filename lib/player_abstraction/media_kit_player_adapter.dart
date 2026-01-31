@@ -1419,13 +1419,16 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
     
     debugPrint('[MediaKit] Seeking to ${seekPosition.inMilliseconds}ms (wasPlaying: $wasPlaying)');
     
+    // STOP the ticker immediately to prevent position interpolation
+    _ticker?.stop();
+    
     // ALWAYS pause before seeking to stop timeline
     _player.pause();
     
     // Perform the seek
     _player.seek(seekPosition);
     
-    // Update interpolation state
+    // Update interpolation state to the seek position
     _interpolatedPosition = seekPosition;
     _lastActualPosition = seekPosition;
     _lastPositionTimestamp = DateTime.now().millisecondsSinceEpoch;
@@ -1436,12 +1439,14 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
         if (!_isDisposed && _player.state.buffering == false) {
           debugPrint('[MediaKit] Resuming after seek');
           _player.play();
+          // Ticker will be restarted by the playing event listener
         } else if (!_isDisposed) {
           // Still buffering, wait a bit more
           Future.delayed(const Duration(milliseconds: 500), () {
             if (!_isDisposed) {
               debugPrint('[MediaKit] Resuming after extended buffer wait');
               _player.play();
+              // Ticker will be restarted by the playing event listener
             }
           });
         }
