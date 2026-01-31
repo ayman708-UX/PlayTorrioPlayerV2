@@ -265,18 +265,13 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
       return;
     }
 
+    // Auto-next feature disabled - just pause at the end
     switch (_playbackEndAction) {
       case PlaybackEndAction.autoNext:
-        if (_context != null && _context!.mounted) {
-          AutoNextEpisodeService.instance
-              .startAutoNextEpisode(_context!, _currentVideoPath!);
-        }
-        break;
       case PlaybackEndAction.pause:
-        AutoNextEpisodeService.instance.cancelAutoNext();
+        // Do nothing, just pause
         break;
       case PlaybackEndAction.exitPlayer:
-        AutoNextEpisodeService.instance.cancelAutoNext();
         if (_context != null && _context!.mounted) {
           final currentContext = _context!;
           Future.microtask(() {
@@ -487,33 +482,15 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
   }
 
   void seekTo(Duration position) {
-    // 仅在自动连播倒计时期间，用户seek才取消自动连播
-    try {
-      if (AutoNextEpisodeService.instance.isCountingDown) {
-        AutoNextEpisodeService.instance.cancelAutoNext();
-        debugPrint('[自动连播] 用户seek时取消自动连播倒计时');
-      }
-    } catch (e) {
-      debugPrint('[自动连播] seekTo时取消自动播放失败: $e');
-    }
     if (!hasVideo) return;
 
     try {
-      _isSeeking = true;
-      bool wasPlayingBeforeSeek = _status == PlayerStatus.playing;
-
-      // STOP the ticker immediately to freeze timeline
-      _uiUpdateTicker?.stop();
-
       // 确保位置在有效范围内（0 到视频总时长）
       Duration clampedPosition = Duration(
           milliseconds:
               position.inMilliseconds.clamp(0, _duration.inMilliseconds));
 
-      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms, stopping timeline');
-      
-      // Show buffering state immediately
-      _setStatus(PlayerStatus.loading, message: '正在缓冲新位置...');
+      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms');
 
       // 立即更新UI状态
       _position = clampedPosition;
@@ -524,28 +501,11 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
       }
       notifyListeners();
 
-      // 执行实际的seek操作 - adapter会处理pause/resume逻辑
+      // 直接调用player.seek，让底层处理
       player.seek(position: clampedPosition.inMilliseconds);
-
-      // Wait for buffering to complete
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        _isSeeking = false;
-        // Restore proper state after buffering
-        if (wasPlayingBeforeSeek) {
-          _setStatus(PlayerStatus.playing);
-          // Restart ticker for timeline updates
-          if (_uiUpdateTicker != null && !_uiUpdateTicker!.isActive) {
-            _uiUpdateTicker!.start();
-          }
-        } else {
-          _setStatus(PlayerStatus.paused);
-        }
-      });
     } catch (e) {
       debugPrint('跳转时出错: $e');
       _error = '跳转时出错: $e';
-      _setStatus(PlayerStatus.idle);
-      _isSeeking = false;
     }
   }
 

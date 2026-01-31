@@ -83,7 +83,7 @@ class IPCBridge {
     try {
       final json = jsonEncode(data);
       stdout.writeln(json);
-      debugPrint('[IPC] Sent: ${data['type']} - ${data['event'] ?? data['code'] ?? ''}');
+      // Removed spammy debug log
     } catch (e) {
       debugPrint('[IPC] Error sending data: $e');
     }
