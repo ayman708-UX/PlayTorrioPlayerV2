@@ -93,9 +93,24 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
         (_player.platform as dynamic)?.setProperty('hwdec', 'mediacodec-copy');
         debugPrint('MediaKit: Android: 设置硬件解码模式为 mediacodec-copy');
       } else {
-        // 对于其他平台，'auto-copy' 仍然是一个好的通用选择
+        // 对于其他平台，先设置默认的 'auto-copy'
         (_player.platform as dynamic)?.setProperty('hwdec', 'auto-copy');
         debugPrint('MediaKit: Non-Android: 设置硬件解码模式为 auto-copy');
+        
+        // Try to enable RTX VSR for NVIDIA GPUs (will gracefully fall back if not supported)
+        if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+          try {
+            (_player.platform as dynamic)?.setProperty('gpu-api', 'vulkan');
+            (_player.platform as dynamic)?.setProperty('gpu-context', 'winvk');
+            // Try NVDEC, but mpv will fall back to auto-copy if not available
+            (_player.platform as dynamic)?.setProperty('hwdec', 'nvdec-copy');
+            (_player.platform as dynamic)?.setProperty('vd-lavc-dr', 'yes');
+            debugPrint('MediaKit: Attempted RTX VSR support (will auto-fallback if unavailable)');
+          } catch (e) {
+            // Silently ignore - already using auto-copy fallback
+            debugPrint('MediaKit: RTX VSR not available, using auto-copy: $e');
+          }
+        }
       }
       
       // Enable proper HTTP seeking for streaming

@@ -2,7 +2,7 @@ name: nipaplay
 description: "PlayTorrio Video Player"
 publish_to: 'none'
 
-version: 1.8.52
+version: 1.8.53
 
 environment:
   sdk: ^3.5.3
