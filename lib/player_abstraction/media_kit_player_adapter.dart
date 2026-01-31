@@ -1399,10 +1399,8 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
     
     debugPrint('[MediaKit] Seeking to ${seekPosition.inMilliseconds}ms (wasPlaying: $wasPlaying)');
     
-    // Pause to stop current buffering
-    if (wasPlaying) {
-      _player.pause();
-    }
+    // ALWAYS pause before seeking to stop current buffering
+    _player.pause();
     
     // Perform the seek
     _player.seek(seekPosition);
@@ -1412,11 +1410,12 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
     _lastActualPosition = seekPosition;
     _lastPositionTimestamp = DateTime.now().millisecondsSinceEpoch;
     
-    // Resume if it was playing
+    // Wait for buffer to fill before resuming
     if (wasPlaying) {
-      // Small delay to ensure seek completes before resuming
-      Future.delayed(const Duration(milliseconds: 100), () {
+      // Wait longer to ensure buffer has data from new position
+      Future.delayed(const Duration(milliseconds: 800), () {
         if (!_isDisposed) {
+          debugPrint('[MediaKit] Resuming playback after seek buffer wait');
           _player.play();
         }
       });

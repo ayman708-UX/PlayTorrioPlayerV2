@@ -746,6 +746,34 @@ class _VideoPlayerUIState extends State<VideoPlayerUI>
                                     child: SpeedBoostIndicator(),
                                   ),
 
+                                // Show loading overlay during seeking
+                                if (videoState.status == PlayerStatus.loading && videoState.hasVideo)
+                                  Positioned.fill(
+                                    child: Container(
+                                      color: Colors.black54,
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const CircularProgressIndicator(
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            if (videoState.statusMessages.isNotEmpty)
+                                              Text(
+                                                videoState.statusMessages.last,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
                                 // Hide right edge menu - not needed in simplified player
                                 ],
                               ),

@@ -500,13 +500,20 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
 
     try {
       _isSeeking = true;
+      bool wasPlayingBeforeSeek = _status == PlayerStatus.playing;
+
+      // STOP the ticker immediately to freeze timeline
+      _uiUpdateTicker?.stop();
 
       // 确保位置在有效范围内（0 到视频总时长）
       Duration clampedPosition = Duration(
           milliseconds:
               position.inMilliseconds.clamp(0, _duration.inMilliseconds));
 
-      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms');
+      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms, stopping timeline');
+      
+      // Show buffering state immediately
+      _setStatus(PlayerStatus.loading, message: '正在缓冲新位置...');
 
       // 立即更新UI状态
       _position = clampedPosition;
@@ -520,9 +527,19 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
       // 执行实际的seek操作 - adapter会处理pause/resume逻辑
       player.seek(position: clampedPosition.inMilliseconds);
 
-      // 短暂延迟后结束seeking状态
-      Future.delayed(const Duration(milliseconds: 200), () {
+      // Wait for buffering to complete
+      Future.delayed(const Duration(milliseconds: 1000), () {
         _isSeeking = false;
+        // Restore proper state after buffering
+        if (wasPlayingBeforeSeek) {
+          _setStatus(PlayerStatus.playing);
+          // Restart ticker for timeline updates
+          if (_uiUpdateTicker != null && !_uiUpdateTicker!.isActive) {
+            _uiUpdateTicker!.start();
+          }
+        } else {
+          _setStatus(PlayerStatus.paused);
+        }
       });
     } catch (e) {
       debugPrint('跳转时出错: $e');
