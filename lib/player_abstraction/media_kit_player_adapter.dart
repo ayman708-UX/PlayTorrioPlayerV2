@@ -97,6 +97,13 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
         (_player.platform as dynamic)?.setProperty('hwdec', 'auto-copy');
         debugPrint('MediaKit: Non-Android: 设置硬件解码模式为 auto-copy');
       }
+      
+      // Enable proper HTTP seeking for streaming
+      (_player.platform as dynamic)?.setProperty('demuxer-seekable-cache', 'yes');
+      (_player.platform as dynamic)?.setProperty('demuxer-max-bytes', '150M');
+      (_player.platform as dynamic)?.setProperty('demuxer-max-back-bytes', '75M');
+      (_player.platform as dynamic)?.setProperty('force-seekable', 'yes');
+      debugPrint('MediaKit: Configured HTTP seeking properties');
     } catch (e) {
       debugPrint('MediaKit: 设置硬件解码模式失败: $e');
     }

@@ -231,9 +231,13 @@ class IPCHandler {
     }
   }
 
+  DateTime? _lastStateChangeTime;
+  Map<String, dynamic>? _lastStateData;
+
   void _onVideoPlayerStateChanged() {
-    // Send state updates to Electron
-    _bridge.sendEvent('state_changed', {
+    // Throttle state updates - only send if changed or 500ms passed
+    final now = DateTime.now();
+    final newStateData = {
       'hasVideo': videoPlayerState.hasVideo,
       'isPlaying': videoPlayerState.status == PlayerStatus.playing,
       'isPaused': videoPlayerState.status == PlayerStatus.paused,
@@ -241,7 +245,28 @@ class IPCHandler {
       'duration': videoPlayerState.duration.inMilliseconds,
       'volume': videoPlayerState.player.volume,
       'isFullscreen': videoPlayerState.isFullscreen,
-    });
+    };
+
+    // Check if state actually changed (ignore position changes < 100ms)
+    if (_lastStateData != null) {
+      final positionChanged = (newStateData['position'] as int) != (_lastStateData!['position'] as int);
+      final otherChanged = newStateData['hasVideo'] != _lastStateData!['hasVideo'] ||
+          newStateData['isPlaying'] != _lastStateData!['isPlaying'] ||
+          newStateData['isPaused'] != _lastStateData!['isPaused'] ||
+          newStateData['duration'] != _lastStateData!['duration'] ||
+          newStateData['volume'] != _lastStateData!['volume'] ||
+          newStateData['isFullscreen'] != _lastStateData!['isFullscreen'];
+
+      // Only send if important state changed OR 500ms passed
+      if (!otherChanged && (!positionChanged || 
+          (_lastStateChangeTime != null && now.difference(_lastStateChangeTime!).inMilliseconds < 500))) {
+        return;
+      }
+    }
+
+    _lastStateChangeTime = now;
+    _lastStateData = newStateData;
+    _bridge.sendEvent('state_changed', newStateData);
   }
 
   void dispose() {
