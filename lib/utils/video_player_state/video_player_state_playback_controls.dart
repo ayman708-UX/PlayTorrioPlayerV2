@@ -485,12 +485,14 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
     if (!hasVideo) return;
 
     try {
+      _isSeeking = true; // Set BEFORE anything else
+      
       // 确保位置在有效范围内（0 到视频总时长）
       Duration clampedPosition = Duration(
           milliseconds:
               position.inMilliseconds.clamp(0, _duration.inMilliseconds));
 
-      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms');
+      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms, _isSeeking=true');
 
       // 立即更新UI状态
       _position = clampedPosition;
@@ -503,9 +505,16 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
 
       // 直接调用player.seek，让底层处理
       player.seek(position: clampedPosition.inMilliseconds);
+      
+      // Clear seeking flag after a delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        _isSeeking = false;
+        debugPrint('[Seek] _isSeeking=false');
+      });
     } catch (e) {
       debugPrint('跳转时出错: $e');
       _error = '跳转时出错: $e';
+      _isSeeking = false;
     }
   }
 
