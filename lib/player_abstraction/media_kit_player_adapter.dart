@@ -1392,10 +1392,35 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
   @override
   void seek({required int position}) {
     final seekPosition = Duration(milliseconds: position);
+    
+    // Force an actual seek by pausing first, then seeking, then resuming
+    // This ensures the underlying player makes a new HTTP request to the server
+    final wasPlaying = _player.state.playing;
+    
+    debugPrint('[MediaKit] Seeking to ${seekPosition.inMilliseconds}ms (wasPlaying: $wasPlaying)');
+    
+    // Pause to stop current buffering
+    if (wasPlaying) {
+      _player.pause();
+    }
+    
+    // Perform the seek
     _player.seek(seekPosition);
+    
+    // Update interpolation state
     _interpolatedPosition = seekPosition;
     _lastActualPosition = seekPosition;
     _lastPositionTimestamp = DateTime.now().millisecondsSinceEpoch;
+    
+    // Resume if it was playing
+    if (wasPlaying) {
+      // Small delay to ensure seek completes before resuming
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!_isDisposed) {
+          _player.play();
+        }
+      });
+    }
   }
 
   @override

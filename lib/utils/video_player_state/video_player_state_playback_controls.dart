@@ -500,30 +500,13 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
 
     try {
       _isSeeking = true;
-      bool wasPlayingBeforeSeek = _status == PlayerStatus.playing; // 记录当前播放状态
 
       // 确保位置在有效范围内（0 到视频总时长）
       Duration clampedPosition = Duration(
           milliseconds:
               position.inMilliseconds.clamp(0, _duration.inMilliseconds));
 
-      // Check if this is a torrent streaming URL
-      bool isTorrentStream = _currentVideoPath != null && 
-          (_currentVideoPath!.contains('/api/stream-file') || 
-           _currentVideoPath!.contains('/api/alt-stream-file'));
-
-      if (isTorrentStream) {
-        // For torrent streams, pause playback and show buffering state
-        debugPrint('[TorrentStream] Seeking in torrent stream, entering buffering state');
-        _setStatus(PlayerStatus.loading, message: '正在缓冲...');
-        player.state = PlaybackState.paused;
-      } else {
-        // 如果是暂停状态，先恢复播放
-        if (_status == PlayerStatus.paused) {
-          player.state = PlaybackState.playing;
-          _setStatus(PlayerStatus.playing);
-        }
-      }
+      debugPrint('[Seek] Seeking to ${clampedPosition.inMilliseconds}ms');
 
       // 立即更新UI状态
       _position = clampedPosition;
@@ -534,34 +517,15 @@ extension VideoPlayerStatePlaybackControls on VideoPlayerState {
       }
       notifyListeners();
 
-      // 更新播放器位置
+      // 执行实际的seek操作 - adapter会处理pause/resume逻辑
       player.seek(position: clampedPosition.inMilliseconds);
 
-      if (isTorrentStream) {
-        // For torrent streams, wait for buffering before resuming
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _isSeeking = false;
-          // Resume playback after buffering
-          if (wasPlayingBeforeSeek) {
-            player.state = PlaybackState.playing;
-            _setStatus(PlayerStatus.playing, message: '继续播放');
-          } else {
-            _setStatus(PlayerStatus.paused);
-          }
-        });
-      } else {
-        // 延迟结束seeking状态，并在需要时恢复暂停
-        Future.delayed(const Duration(milliseconds: 100), () {
-          _isSeeking = false;
-          // 如果之前是暂停状态，恢复暂停
-          if (!wasPlayingBeforeSeek && _status == PlayerStatus.playing) {
-            player.state = PlaybackState.paused;
-            _setStatus(PlayerStatus.paused);
-          }
-        });
-      }
+      // 短暂延迟后结束seeking状态
+      Future.delayed(const Duration(milliseconds: 200), () {
+        _isSeeking = false;
+      });
     } catch (e) {
-      //debugPrint('跳转时出错 (已静默处理): $e');
+      debugPrint('跳转时出错: $e');
       _error = '跳转时出错: $e';
       _setStatus(PlayerStatus.idle);
       _isSeeking = false;
