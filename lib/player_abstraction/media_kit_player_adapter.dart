@@ -1425,33 +1425,38 @@ class MediaKitPlayerAdapter implements AbstractPlayer, TickerProvider {
     // ALWAYS pause before seeking to stop timeline
     _player.pause();
     
-    // Perform the seek
-    _player.seek(seekPosition);
-    
-    // Update interpolation state to the seek position
-    _interpolatedPosition = seekPosition;
-    _lastActualPosition = seekPosition;
-    _lastPositionTimestamp = DateTime.now().millisecondsSinceEpoch;
-    
-    // Only resume if it was playing AND after a delay to allow buffering
-    if (wasPlaying) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (!_isDisposed && _player.state.buffering == false) {
-          debugPrint('[MediaKit] Resuming after seek');
-          _player.play();
-          // Ticker will be restarted by the playing event listener
-        } else if (!_isDisposed) {
-          // Still buffering, wait a bit more
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (!_isDisposed) {
-              debugPrint('[MediaKit] Resuming after extended buffer wait');
-              _player.play();
-              // Ticker will be restarted by the playing event listener
-            }
-          });
-        }
-      });
-    }
+    // Wait a tiny bit for pause state to propagate
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (_isDisposed) return;
+      
+      // Perform the seek
+      _player.seek(seekPosition);
+      
+      // Update interpolation state to the seek position
+      _interpolatedPosition = seekPosition;
+      _lastActualPosition = seekPosition;
+      _lastPositionTimestamp = DateTime.now().millisecondsSinceEpoch;
+      
+      // Only resume if it was playing AND after a delay to allow buffering
+      if (wasPlaying) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (!_isDisposed && _player.state.buffering == false) {
+            debugPrint('[MediaKit] Resuming after seek');
+            _player.play();
+            // Ticker will be restarted by the playing event listener
+          } else if (!_isDisposed) {
+            // Still buffering, wait a bit more
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (!_isDisposed) {
+                debugPrint('[MediaKit] Resuming after extended buffer wait');
+                _player.play();
+                // Ticker will be restarted by the playing event listener
+              }
+            });
+          }
+        });
+      }
+    });
   }
 
   @override
